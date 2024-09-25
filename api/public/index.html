@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Chat</title>
+  </head>
+  <body>
+    <h2>Chat Application</h2>
+    <div id="chat-box"></div>
+    <input type="text" id="message" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      let currentUserId = "1"; // Simulate logged-in user
+      let currentReceiverId = "2"; // Simulate chatting with user2
+
+      // Identify user to the server
+      socket.emit("identify", currentUserId);
+
+      // Send a message to the server
+      function sendMessage() {
+        const message = document.getElementById("message").value;
+        socket.emit("chatMessage", {
+          sender: currentUserId,
+          receiver: currentReceiverId,
+          message: message,
+        });
+        document.getElementById("message").value = "";
+        displayMessage(`You: ` + message);
+      }
+
+      // Listen for incoming messages
+      socket.on("chatMessage", (data) => {
+        console.log(data);
+        displayMessage(data.sender + ": " + data.message);
+      });
+
+      // Display messages in the chat box
+      function displayMessage(msg) {
+        const chatBox = document.getElementById("chat-box");
+        const messageElem = document.createElement("div");
+        messageElem.innerText = msg;
+        chatBox.appendChild(messageElem);
+      }
+
+      // Load chat history when the page loads
+      window.onload = async () => {
+        const response = await fetch(
+          `/chat/chat-history/${currentUserId}/${currentReceiverId}`
+        );
+        const messages = await response.json();
+        messages.forEach((message) => {
+            console.log(message)
+          const msgText =
+            message.sender_id == currentUserId
+              ? "You: "
+              : message.sender_id + ": ";
+          displayMessage(msgText + message.message);
+        });
+      };
+    </script>
+  </body>
+</html>
