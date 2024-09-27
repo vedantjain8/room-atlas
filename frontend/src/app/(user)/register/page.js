@@ -9,6 +9,8 @@ import {
   ModalFooter,
   Button,
   useDisclosure,
+  Autocomplete,
+  AutocompleteItem
 } from "@nextui-org/react";
 import { useState } from "react";
 import { EyeFilledIcon } from "./EyeFilledIcon";
@@ -17,6 +19,8 @@ import { Select, SelectItem } from "@nextui-org/react";
 import { Link } from "@nextui-org/react";
 import { toast } from "react-toastify";
 import { Avatar } from "@nextui-org/react";
+import {city} from "./city_data";
+import {state} from "./state_data";
 
 export default function Register() {
   const [isVisible, setIsVisible] = useState(false);
@@ -30,7 +34,6 @@ export default function Register() {
     password: "",
     confirm_password: "",
     phone: "",
-    security_question: "",
     security_answer: "",
   });
 
@@ -174,7 +177,7 @@ export default function Register() {
               // onChange={handleChange}
               endContent={
                 <button
-                  className="focus:outline-none"
+                  className="focus:outline-none flex justify-center content-center"
                   type="button"
                   onClick={toggleVisibility2}
                   aria-label="toggle password visibility"
@@ -197,7 +200,7 @@ export default function Register() {
               // onChange={handleChange}
             />
             <Select
-              label="Select a security question"
+              label="Security question"
               className="max-w-xs"
               name="security_question"
               // onChange={handleChange}
@@ -282,12 +285,33 @@ export default function Register() {
       <>
         <div className="flex items-center justify-center h-screen overflow-y-clip">
           <div className="flex w-64 flex-col gap-4 items-center justify-center register1">
-          <Avatar showFallback name={formData.username ?? ""} src={`"${src}"`} />
+          
             <Input type="text" variant="bordered" label="Gender" />
-            <Input type="text" variant="bordered" label="dob" />
-            <Input type="text" variant="bordered" label="occupation" />
-            <Input type="email" variant="bordered" label="City" />
-            <Input type="email" variant="bordered" label="State" />
+            <Input type="text" variant="bordered" label="DOB" />
+            <Select
+              label="I'm a "
+              className="max-w-xs"
+              name="security_question"
+            >
+              <SelectItem>Student</SelectItem>
+              <SelectItem>Working Professional</SelectItem>
+            </Select>  
+            <Autocomplete
+              defaultItems={state}
+              label="State"
+              className="max-w-xs"
+            >
+              {(state) => <AutocompleteItem key={state.value}>{state.label}</AutocompleteItem>}
+            </Autocomplete>
+            <Autocomplete
+              defaultItems={city}
+              label="City"
+              className="max-w-xs"
+            >
+              {(city) => <AutocompleteItem key={city.value}>{city.label}</AutocompleteItem>}
+            </Autocomplete>
+            
+            <Button>Proceed</Button>
           </div>
         </div>
       </>
