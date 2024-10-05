@@ -1,34 +1,32 @@
 CREATE TABLE IF NOT EXISTS preferences (
-    preferenceID serial PRIMARY KEY ,
+    preference_id serial PRIMARY KEY ,
     preference VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS security_questions(
-    questionID serial PRIMARY KEY ,
+    question_id serial PRIMARY KEY ,
     question VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users (
-    userid serial PRIMARY KEY,
+    user_id serial PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     pass_hash VARCHAR(255) NOT NULL,
     question INT NOT NULL,
     answer_hash VARCHAR(255) NOT NULL,
     bio TEXT,
-    phone int NOT NULL,
+    phone VARCHAR(10) NOT NULL UNIQUE,
     avatar VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
     active BOOLEAN DEFAULT TRUE,
     user_role VARCHAR(7) DEFAULT 'user',
     dob DATE ,
-    gender char(1) NOT NULL,
+    gender char(1) NOT NULL CHECK(gender IN ("M","F","O")),
     occupation VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
     state VARCHAR(255) NOT NULL,
-    preference int,
     verified_email BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (preference) REFERENCES preferences(preferenceID),
     FOREIGN KEY (question) REFERENCES security_questions(questionID),
     UNIQUE (username)
 );
@@ -55,15 +53,33 @@ INSERT INTO security_questions(question) VALUES
 ('What is your favorite color?'),
 ('What is the name of your favorite vacation spot?');
 
+CREATE TABLE IF NOT EXISTS preference_user_link(
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL, 
+    preference_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (preference_id) REFERENCES preferences(preference_id),
+    UNIQUE(user_id, preference_id)
+);
+
+CREATE TABLE IF NOT EXISTS preference_listing_link (
+    id SERIAL PRIMARY KEY,
+    listing_id INT NOT NULL,
+    preference_id INT NOT NULL,
+    FOREIGN KEY (listing_id) REFERENCES listing(property_id),
+    FOREIGN KEY (preference_id) REFERENCES preferences(preference_id),
+    UNIQUE(listing_id, preference_id)
+  );
+
 CREATE TABLE IF NOT EXISTS refresh_token(
-    userid int, 
+    user_id int, 
     token TEXT NOT NULL, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userid) REFERENCES users(userid)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE IF NOT EXISTS listing(
-    propertyID serial PRIMARY KEY,
+    property_id serial PRIMARY KEY,
     property_title VARCHAR(255) NOT NULL,
     property_desc TEXT NOT NULL,
     images JSON,
@@ -75,27 +91,26 @@ CREATE TABLE IF NOT EXISTS listing(
     city VARCHAR(255) NOT NULL,
     state VARCHAR(255) NOT NULL,
     listingType INT NOT NULL,
-    preferenceID INT NOT NULL,
-    FOREIGN KEY (uploadedBy) REFERENCES users(userid),
-    FOREIGN KEY (preferenceID) REFERENCES preferences(preferenceID)
+    FOREIGN KEY (uploadedBy) REFERENCES users(user_id),
 );
 
+-- TODO: Add a trigger to update the listing stats table
 CREATE TABLE IF NOT EXISTS listing_stats(
-    propertyiD int PRIMARY KEY,
+    property_id int PRIMARY KEY,
     views int DEFAULT 0,
     likes int DEFAULT 0,
     shares int default 0,
-    FOREIGN KEY (propertyiD) REFERENCES listing(propertyID)
+    FOREIGN KEY (property_id) REFERENCES listing(property_id)
 );
 
 CREATE TABLE IF NOT EXISTS report(
-    reportiD serial PRIMARY KEY,
+    report_id serial PRIMARY KEY,
     reported_by int NOT NULL,
     reported_on TIMESTAMP DEFAULT NOW(),
     reported_for TEXT NOT NULL,
-    propertyID int NOT NULL,
-    FOREIGN KEY (reported_by) REFERENCES users(userid),
-    FOREIGN KEY (propertyID) REFERENCES listing(propertyID)
+    property_id int NOT NULL,
+    FOREIGN KEY (reported_by) REFERENCES users(user_id),
+    FOREIGN KEY (property_id) REFERENCES listing(property_id)
 );
 
 CREATE TABLE IF NOT EXISTS messages(
@@ -106,4 +121,34 @@ CREATE TABLE IF NOT EXISTS messages(
     created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (sender_id) REFERENCES users(userid),
     FOREIGN KEY (receiver_id) REFERENCES users(userid)
+);
+
+CREATE TABLE IF NOT EXISTS user_ratings (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    ratings DECIMAL(2,1) NOT NULL,
+    comments VARCHAR(255) DEFAULT NULL,
+    rated_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (rated_by) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS property_ratings (
+    id SERIAL PRIMARY KEY ,
+    property_id INT NOT NULL, 
+    ratings DECIMAL(2,1) NOT NULL , 
+    comments VARCHAR(255) DEFAULT NULL , 
+    rated_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY property_id REFERENCES listing(property_id),
+    FOREIGN KEY (reviewer_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS image_upload_log(
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    image_path  TEXT NOT NULL,
+    uploaded_on TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
