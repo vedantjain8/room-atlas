@@ -69,7 +69,6 @@ router.post("/register", async (req, res) => {
     emailVerified,
   } = req.body;
 
-
   if (!email) {
     return res.status(400).json({ message: "Enter a valid email" });
   }
@@ -150,50 +149,58 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  let { username, email, password } = req.body;
+  let { loginIdentifier, identifier, password } = req.body;
   let query;
+  console.log(loginIdentifier, identifier);
   // username or email, query builder use query from variable
 
-  if (
-    (!username ||
-      !validator.isLength(username, { min: 4, max: 255 }) ||
-      !allowedCharactersRegex.test(username)) &&
-    (!email || !validator.isEmail(email))
-  ) {
-    return res.status(400).json({ message: "Enter a valid username or email" });
+  if (!identifier) {
+    return res.status(400).json({ message: "Username or email is required" });
   }
 
-  if (email) {
-    query = `SELECT pass_hash from users where email='${email}'`;
-  }
+  const isValidUsername =
+    loginIdentifier === "username" &&
+    validator.isLength(identifier, { min: 4, max: 255 }) &&
+    allowedCharactersRegex.test(identifier);
 
-  if (username) {
-    query = `SELECT pass_hash from users where username='${username}'`;
+  const isValidEmail =
+    loginIdentifier === "email" && validator.isEmail(identifier);
+
+  if (!isValidUsername && !isValidEmail) {
+    return res
+      .status(400)
+      .json({ message: `Enter a valid ${loginIdentifier}` });
   }
 
   if (!password || !validator.isLength(password, { min: 4, max: 255 })) {
     return res.status(400).json({ message: "Enter a valid password" });
   }
 
-  const pass_hash_result = await pool.query(query);
+  query = `SELECT pass_hash from users where ${loginIdentifier}='${identifier}'`;
+  try {
+    const pass_hash_result = await pool.query(query);
 
-  if (pass_hash_result.rows.length === 0) {
-    return res.status(400).json({ message: "Invalid username" });
+    if (pass_hash_result.rows.length === 0) {
+      return res.status(400).json({ message: "Invalid username" });
+    }
+
+    const pass_hash = pass_hash_result.rows[0].pass_hash;
+
+    const passwordCorrect = await checkString(password, pass_hash);
+
+    if (!passwordCorrect) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
+
+    const refreshToken = generateRefreshToken(identifier);
+
+    return res
+      .status(200)
+      .json({ message: "Login successful", token: refreshToken });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
   }
-
-  const pass_hash = pass_hash_result.rows[0].pass_hash;
-
-  const passwordCorrect = await checkString(password, pass_hash);
-
-  if (!passwordCorrect) {
-    return res.status(400).json({ message: "Invalid password" });
-  }
-
-  const refreshToken = generateRefreshToken(username);
-
-  return res
-    .status(200)
-    .json({ message: "Login successful", token: refreshToken });
 });
 
 module.exports = router;
