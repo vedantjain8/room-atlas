@@ -11,6 +11,10 @@ const userRoutes = require("./routes/user/userRoutes");
 const listingRoutes = require("./routes/listing/listingRoutes");
 const chattingRoutes = require("./routes/chat/chattingRoutes");
 const verificationRoutes = require("./routes/user/verificationRoutes");
+const userProfileRoute = require("./routes/user/userProfileRoute");
+const jwtRoutes = require("./routes/jwtRoutes");
+
+const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,7 +27,7 @@ app.use(express.static("public"));
 app.set("trust proxy", true);
 app.use(
   cors({
-    origin: ["http://127.0.0.1:5500","http://localhost:3000"],
+    origin: ["http://127.0.0.1:5500", "http://localhost:3000"],
   })
 );
 
@@ -34,11 +38,16 @@ app.use(
   )
 );
 
+// routes for different modules
+app.use(uploadImageRoutes);
+
 // routes for logging
 app.use("/user", userRoutes);
 app.use("/listing", listingRoutes);
 app.use("/chat", chattingRoutes);
 app.use("/verify", verificationRoutes);
+app.use("/user", userProfileRoute);
+app.use(jwtRoutes);
 
 // app.use(jwtRoutes);
 

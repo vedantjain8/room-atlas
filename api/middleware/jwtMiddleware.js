@@ -10,7 +10,7 @@ function authenticateToken(req, res, next) {
   jwt.verify(token, privkey, (err, user) => {
     if (err) {
       console.error(err);
-      return res.sendStatus(403);
+      return res.sendStatus(401);
     }
     req.user = user;
 
@@ -19,12 +19,15 @@ function authenticateToken(req, res, next) {
 }
 
 
+
 // {
 //   "message": "This is a protected route",
 //   "user": {
-//       "userID": "user68af5d7581167f212f27",
+//       "userID": "1",
 //       "iat": 1723571023,
 //       "exp": 1723614223
 //   }
 // }
 module.exports = { authenticateToken };
+
+
