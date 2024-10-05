@@ -1,25 +1,24 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
-import {
-  IconBrandGithub,
-  IconBrandGoogle,
-  IconBrandOnlyfans,
-} from "@tabler/icons-react";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { State, City, IState } from "country-state-city";
 import ExpandableOTPInput from "@/components/otpModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { DatePicker, DateValue, RadioGroup, Radio } from "@nextui-org/react";
+import {
+  faPaperPlane,
+  faArrowRight,
+  faExclamationCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function RegisterForm() {
   const [page, setPage] = useState(1); // set this to 2 to see page 2
-  const [isVerified, setIsVerified] = useState(false);
+  const [emailIsVerified, setEmailIsVerified] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    emailVerified: isVerified,
+    emailVerified: emailIsVerified,
     email: "",
     password: "",
     confirmPassword: "",
@@ -37,24 +36,25 @@ export default function RegisterForm() {
   const [cities, setCities] = useState<string[]>([]);
   const [selectedState, setSelectedstate] = useState(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const [errors, setErrors] = useState<Errors>({});
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // const cityData = City.getCitiesOfState("IN", City.isoCode).map((city) => ({
-  //   value: city.name,
-  //   displayValue: city.name,
-  // }));
-  
   // TODO: show loading when  needed
   // TODO: show error message
-   
+  // TODO: set error message when the api server is not rechable in try catch block of the otp function
+  // TODO: implement show password toggle
+  // TODO: show a green tick when the email is verified
+  // TODO: change the input components to nextui input components
 
   const [active, setActive] = useState<boolean>(false);
 
   const sendOtp = async (email: String) => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${process.env.HOSTNAME}/verify/email`, {
         method: "POST",
@@ -70,6 +70,9 @@ export default function RegisterForm() {
       setActive(true);
     } catch (error: any) {
       console.error("Request failed:", error.message);
+      setErrors({ email: error.message });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,6 +100,8 @@ export default function RegisterForm() {
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
       errors.email = "Valid email is required";
     if (!formData.password) errors.password = "Password is required";
+    if (!formData.confirmPassword)
+      errors.confirmPassword = "Confirm Password is required";
     if (formData.password !== formData.confirmPassword)
       errors.confirmPassword = "Passwords do not match";
     if (!formData.securityQuestion)
@@ -109,7 +114,7 @@ export default function RegisterForm() {
     return errors;
   };
 
-  const handleNext = (e: any) => {
+  const handleNext = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const pageOneErrors = validatePageOne();
 
@@ -131,9 +136,11 @@ export default function RegisterForm() {
     return errors;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     const pageTwoErrors = validatePageTwo();
     if (Object.keys(pageTwoErrors).length === 0) {
+      setIsLoading(true);
       try {
         const response = await fetch(`${process.env.HOSTNAME}/user/register`, {
           method: "POST",
@@ -145,11 +152,15 @@ export default function RegisterForm() {
         const data = await response.json();
         if (data.success) {
           alert("User registered successfully");
+          // TODO: redirect to login page
         } else {
           alert("Error registering user");
         }
       } catch (error) {
         console.error("Error:", error);
+        alert("Error registering user");
+      } finally {
+        setIsLoading(false);
       }
     } else {
       setErrors(pageTwoErrors);
@@ -163,15 +174,28 @@ export default function RegisterForm() {
       [name]: value,
     });
 
+    setErrors({ ...errors, [name]: undefined });
+
     if (e.target.name === "state") {
       setSelectedstate(value);
     }
+  };
+
+  const handleDOBChange = (date: DateValue) => {
+    setFormData({ ...formData, dob: `${date.year}/${date.month}/${date.day}` });
+    setErrors({ ...errors, dob: undefined });
   };
 
   useEffect(() => {
     const indianstates = State.getStatesOfCountry("IN");
     setStates(indianstates);
   }, []);
+
+  useEffect(() => {
+    if (emailIsVerified) {
+      setFormData({ ...formData, emailVerified: true });
+    }
+  }, [emailIsVerified]);
 
   useEffect(() => {
     if (selectedState) {
@@ -196,16 +220,28 @@ export default function RegisterForm() {
           </h1>
           <LabelInputContainer className="mb-4">
             <Input
-              id="firstname"
+              id="username"
               placeholder="Userame"
               type="text"
               name="username"
               onChange={handleChange}
+              className={errors.username ? "border-red-500" : ""}
             />
+            {errors.username && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">{errors.username}</p>
+              </div>
+            )}
           </LabelInputContainer>
 
-          <div className="flex justify-between">
-            <LabelInputContainer className="mb-4 w-9/12">
+          <div className="flex justify-between ">
+            <LabelInputContainer
+              className={`mb-4 ${!formData.emailVerified ? "w-9/12" : ""}`}
+            >
               <Input
                 id="email"
                 placeholder="Email"
@@ -213,29 +249,56 @@ export default function RegisterForm() {
                 name="email"
                 onChange={handleChange}
               />
+              {errors.email && (
+                <div className="flex items-center mt-1 ml-1">
+                  <FontAwesomeIcon
+                    icon={faExclamationCircle}
+                    className="text-red-500 mr-1"
+                  />
+                  <p className="text-red-500 text-sm">{errors.email}</p>
+                </div>
+              )}
+
+              {errors.emailVerified && (
+                <div className="flex items-center mt-1 ml-1">
+                  <FontAwesomeIcon
+                    icon={faExclamationCircle}
+                    className="text-red-500 mr-1"
+                  />
+                  <p className="text-red-500 text-sm">{errors.emailVerified}</p>
+                </div>
+              )}
             </LabelInputContainer>
             {active && (
-              <ExpandableOTPInput active={active} setActive={setActive} />
+              <ExpandableOTPInput
+                emailIsVerified={emailIsVerified}
+                setEmailIsVerified={setEmailIsVerified}
+                email={formData.email}
+                active={active}
+                setActive={setActive}
+              />
             )}
-
-            <button
-              className="relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
-              onClick={(e) => {
-                e.preventDefault();
-                if (!(formData.email && /\S+@\S+\.\S+/.test(formData.email))) {
-                  setErrors({ email: "Valid email is required" });
-                  return;
-                }
-                sendOtp(formData.email);
-              }}
-            >
-              {/* <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />   */}
-              {/* TODO: ==ye acha nhi lgg raha h== */}
-              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
-                Verify
-              </span>
-            </button>
+            {!formData.emailVerified ? (
+              <button
+                className="w-3/12 relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (
+                    !(formData.email && /\S+@\S+\.\S+/.test(formData.email))
+                  ) {
+                    setErrors({ email: "Valid email is required" });
+                    return;
+                  }
+                  sendOtp(formData.email);
+                }}
+              >
+                <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
+                  Verify
+                </span>
+              </button>
+            ) : null}
           </div>
+
           <LabelInputContainer className="mb-4">
             <Input
               id="password"
@@ -245,6 +308,15 @@ export default function RegisterForm() {
               onChange={handleChange}
               // add a eye btn to show/hide password
             />
+            {errors.password && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">{errors.password}</p>
+              </div>
+            )}
           </LabelInputContainer>
           <LabelInputContainer className="mb-4">
             <Input
@@ -255,26 +327,47 @@ export default function RegisterForm() {
               onChange={handleChange}
               // add a eye btn to show/hide password
             />
+            {errors.confirmPassword && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+              </div>
+            )}
           </LabelInputContainer>
+          <LabelInputContainer className="mb-4">
+            <select
+              id="securityQuestion"
+              name="securityQuestion"
+              value={formData.securityQuestion}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 "
+            >
+              <option value="" disabled className="opacity-55">
+                Select a security question
+              </option>
+              <option value="petName">What is your pet's name?</option>
+              <option value="birthCity">In which city were you born?</option>
+              <option value="firstSchool">
+                What is the name of your first school?
+              </option>
+              <option value="favoriteFood">What is your favorite food?</option>
+            </select>
 
-          <select
-            id="securityQuestion"
-            name="securityQuestion"
-            value={formData.securityQuestion}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-          >
-            <option value="" disabled className="opacity-55">
-              Select a security question
-            </option>
-            <option value="petName">What is your pet's name?</option>
-            <option value="birthCity">In which city were you born?</option>
-            <option value="firstSchool">
-              What is the name of your first school?
-            </option>
-            <option value="favoriteFood">What is your favorite food?</option>
-          </select>
-
+            {errors.securityQuestion && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">
+                  {errors.securityQuestion}
+                </p>
+              </div>
+            )}
+          </LabelInputContainer>
           <LabelInputContainer className="mb-4">
             <Input
               id="securityAnswer"
@@ -283,6 +376,15 @@ export default function RegisterForm() {
               name="securityAnswer"
               onChange={handleChange}
             />
+            {errors.securityAnswer && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">{errors.securityAnswer}</p>
+              </div>
+            )}
           </LabelInputContainer>
 
           <button
@@ -302,58 +404,84 @@ export default function RegisterForm() {
           <h1 className="flex justify-center items-center text-xl font-medium">
             Register
           </h1>
-          <select
-            id="gender"
-            name="gender"
-            value={formData.gender}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-          >
-            <option value="" disabled className="">
-              Gender
-            </option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
           <LabelInputContainer className="mb-4">
-            <Input
-              id="dob"
-              placeholder="Date of Birth"
-              type="text"
-              name="dob"
+            <RadioGroup
+              label="Select your favorite city"
+              orientation="horizontal"
               onChange={handleChange}
+              isInvalid={!!errors.gender}
+              errorMessage={errors.gender}
+            >
+              <Radio value="M">Male</Radio>
+              <Radio value="F">Female</Radio>
+              <Radio value="O">Other</Radio>
+            </RadioGroup>
+          </LabelInputContainer>
+          <LabelInputContainer className="mb-4">
+            <DatePicker
+              label="Date of Birth"
+              variant="bordered"
+              id="dob"
+              name="dob"
+              isInvalid={!!errors.dob}
+              errorMessage={errors.dob}
+              showMonthAndYearPickers
+              onChange={handleDOBChange}
             />
           </LabelInputContainer>
-          <select
-            id="occupation"
-            name="occupation"
-            value={formData.occupation}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-          >
-            <option value="" disabled className="opacity-55">
-              I'm a
-            </option>
-            <option value="student">Student</option>
-            <option value="working_professional">Working Professional</option>
-          </select>
-          <select
-            id="state"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-          >
-            <option value="" disabled className="opacity-55">
-              Select State
-            </option>
-
-            {states.map((state: { name: string; isoCode: string }) => (
-              <option key={state.name} value={state.isoCode}>
-                {state.name}
+          <LabelInputContainer className="mb-4">
+            <select
+              id="occupation"
+              name="occupation"
+              value={formData.occupation}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled className="opacity-55">
+                I'm a
               </option>
-            ))}
-          </select>
+              <option value="student">Student</option>
+              <option value="working_professional">Working Professional</option>
+              <option value="family">Family</option>
+            </select>
+            {errors.occupation && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">{errors.occupation}</p>
+              </div>
+            )}
+          </LabelInputContainer>
+          <LabelInputContainer className="mb-4">
+            <select
+              id="state"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled className="opacity-55">
+                Select State
+              </option>
+
+              {states.map((state: { name: string; isoCode: string }) => (
+                <option key={state.name} value={state.isoCode}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+            {errors.state && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">{errors.state}</p>
+              </div>
+            )}
+          </LabelInputContainer>
 
           <select
             id="city"

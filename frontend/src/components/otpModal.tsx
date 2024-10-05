@@ -4,15 +4,24 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "../app/hooks/use-outside-click";
 
 interface ExpandableOTPInputProps {
+  email: string;
   active: boolean;
   setActive: (value: boolean) => void;
+  emailIsVerified: boolean;
+  setEmailIsVerified: (value: boolean) => void;
 }
-const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({ active, setActive }) => {
+const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({
+  email,
+  active,
+  setActive,
+  emailIsVerified,
+  setEmailIsVerified,
+}) => {
   // [active, setActive] = useState<boolean | null>(null);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]); // Assuming a 6-digit OTP
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
-  
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -49,8 +58,27 @@ const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({ active, setActi
     }
   };
 
-  const handleSubmit = () => {
-    alert(`Entered OTP: ${otp.join("")}`);
+  const handleSubmit = async () => {
+    const otpCheckResponse = await fetch(
+      `${process.env.HOSTNAME}/verify/email/check`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ otp: otp.join(""), email: email }),
+      }
+    );
+
+    if (otpCheckResponse.ok) {
+      setEmailIsVerified(true);
+      setActive(false);
+      alert("OTP verified successfully");
+    } else {
+      setEmailIsVerified(false);
+      setActive(false);
+      alert("OTP is incorrect");
+    }
   };
 
   return (
@@ -92,6 +120,7 @@ const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({ active, setActi
               <div className="flex justify-center gap-4 mb-4">
                 {otp.map((digit, index) => (
                   <input
+                    autoFocus={index === 0}
                     key={index}
                     id={`otp-${index}`}
                     type="text"
@@ -122,7 +151,7 @@ const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({ active, setActi
       </div> */}
     </>
   );
-}
+};
 
 export const CloseIcon = () => (
   <motion.svg
