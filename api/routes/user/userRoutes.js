@@ -66,23 +66,9 @@ router.post("/register", async (req, res) => {
     city,
     state,
     created_at,
+    emailVerified,
   } = req.body;
 
-  console.log(
-    username,
-    email,
-    password,
-    security_question,
-    security_answer,
-    phone,
-    gender,
-    dob,
-    occupation,
-    city,
-    state,
-    created_at
-  );
-  // return res.status(200).json({ message: "test" });
 
   if (!email) {
     return res.status(400).json({ message: "Enter a valid email" });
@@ -93,13 +79,11 @@ router.post("/register", async (req, res) => {
     return res.status(400).json(isUsernameAvailable);
   }
 
-  // implement redis username check
-
   if (!password || !validator.isLength(password, { min: 4, max: 255 })) {
     return res.status(400).json({ message: "Enter a valid password" });
   }
 
-  if (!answer || !validator.isLength(answer, { min: 4, max: 255 })) {
+  if (!security_answer) {
     return res.status(400).json({ message: "Enter a valid answer" });
   }
 
@@ -131,7 +115,8 @@ router.post("/register", async (req, res) => {
       occupation,
       city,
       state,
-      ) VALUES ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning userid`,
+      verified_email
+      ) VALUES ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning userid`,
       [
         username,
         email,
@@ -144,6 +129,7 @@ router.post("/register", async (req, res) => {
         occupation,
         city,
         state,
+        emailVerified ?? false,
       ]
     );
 
