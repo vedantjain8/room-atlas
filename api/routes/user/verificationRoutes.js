@@ -7,8 +7,8 @@ require("dotenv").config();
 const router = express.Router();
 
 // /verify/email
-router.post("/email", (req, res) => {
-  // limit this to 20 requests per hour
+router.post("/email", async (req, res) => {
+  // TODO: limit this to 20 requests per hour
   // or 2000 requests per day
   // this can be done using cron job
   // hourly cron job to create a new key that has the mail remaining count
@@ -27,7 +27,7 @@ router.post("/email", (req, res) => {
     from: process.env.EMAIL_MAIL,
     to: email,
     subject: "OTP for email verification",
-    text: `Your OTP is ${otp}`,
+    html: `Your OTP is <b>${otp}</b>`,
     // todo: add html template
   };
 
@@ -60,7 +60,7 @@ router.post("/email/check", async (req, res) => {
   }
 
   await redisClient.del(email);
-  // update in db for email verified
+  // TODO: update in db for email verified
   return res.status(200).json({ message: "OTP verified successfully" });
 });
 

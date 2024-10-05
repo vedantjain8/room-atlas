@@ -44,9 +44,12 @@ async function redisCheckUsername(username) {
   }
 }
 
-router.post("/check", (req, res) => {
-  const { username } = req.body;
-  redisCheckUsername(username, res);
+router.get("/check", async (req, res) => {
+  const username = req.query.username;
+  if (!username || username == "") {
+    return res.status(400);
+  }
+  return res.status(200).json(await redisCheckUsername(username));
 });
 
 router.post("/register", async (req, res) => {
@@ -54,18 +57,32 @@ router.post("/register", async (req, res) => {
     username,
     email,
     password,
-    question,
-    answer,
+    security_question,
+    security_answer,
     phone,
     gender,
-    avatar,
     dob,
     occupation,
     city,
     state,
     created_at,
-    preferences,
   } = req.body;
+
+  console.log(
+    username,
+    email,
+    password,
+    security_question,
+    security_answer,
+    phone,
+    gender,
+    dob,
+    occupation,
+    city,
+    state,
+    created_at
+  );
+  // return res.status(200).json({ message: "test" });
 
   if (!email) {
     return res.status(400).json({ message: "Enter a valid email" });
@@ -90,17 +107,13 @@ router.post("/register", async (req, res) => {
     return res.status(400).json({ message: "Enter a valid phone number" });
   }
 
-  if (!avatar || !validator.isURL(avatar)) {
-    avatar = "/assets/profile/default_user_profile.png";
-  }
-
   if (!created_at) {
     created_at = new Date();
   }
 
   try {
     const pass_hash = await hashString(password);
-    const securityAns_hash = await hashString(answer);
+    const securityAns_hash = await hashString(security_answer);
 
     const refreshToken = generateRefreshToken(username);
     const accessToken = generateAccessToken(username);
@@ -114,27 +127,23 @@ router.post("/register", async (req, res) => {
       question,
       answer_hash,
       phone,
-      avatar,
       gender,
       occupation,
       city,
       state,
-      preference
-      ) VALUES ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning userid`,
+      ) VALUES ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning userid`,
       [
         username,
         email,
         pass_hash,
         dob,
-        question,
+        security_question,
         securityAns_hash,
         phone,
-        "default",
         gender,
         occupation,
         city,
         state,
-        preferences,
       ]
     );
 
@@ -180,10 +189,8 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ message: "Enter a valid password" });
   }
 
-  const pass_hash_result = await pool.query(
-    query
-  );
-  
+  const pass_hash_result = await pool.query(query);
+
   if (pass_hash_result.rows.length === 0) {
     return res.status(400).json({ message: "Invalid username" });
   }
