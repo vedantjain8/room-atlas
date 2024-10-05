@@ -7,15 +7,19 @@ interface ExpandableOTPInputProps {
   email: string;
   active: boolean;
   setActive: (value: boolean) => void;
-  emailIsVerified: boolean;
-  setEmailIsVerified: (value: boolean) => void;
+  formData: any;
+  setFormData: (value: any) => void;
+  errors: any;
+  setErrors: (value: any) => void;
 }
 const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({
   email,
   active,
   setActive,
-  emailIsVerified,
-  setEmailIsVerified,
+  formData,
+  setFormData,
+  errors,
+  setErrors,
 }) => {
   // [active, setActive] = useState<boolean | null>(null);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]); // Assuming a 6-digit OTP
@@ -71,11 +75,13 @@ const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({
     );
 
     if (otpCheckResponse.ok) {
-      setEmailIsVerified(true);
+      setFormData({ ...formData, emailVerified: true });
+      setErrors({ ...errors, emailVerified: undefined });
       setActive(false);
       alert("OTP verified successfully");
     } else {
-      setEmailIsVerified(false);
+      setFormData({ ...formData, emailVerified: false });
+      setErrors({ ...errors, emailVerified: false });
       setActive(false);
       alert("OTP is incorrect");
     }

@@ -6,7 +6,13 @@ import { Input } from "@/components/ui/input";
 import { State, City, IState } from "country-state-city";
 import ExpandableOTPInput from "@/components/otpModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { DatePicker, DateValue, RadioGroup, Radio } from "@nextui-org/react";
+import {
+  DatePicker,
+  DateValue,
+  RadioGroup,
+  Radio,
+  Spinner,
+} from "@nextui-org/react";
 import {
   faPaperPlane,
   faArrowRight,
@@ -15,22 +21,38 @@ import {
 
 export default function RegisterForm() {
   const [page, setPage] = useState(1); // set this to 2 to see page 2
-  const [emailIsVerified, setEmailIsVerified] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
-    emailVerified: emailIsVerified,
+    emailVerified: false,
     email: "",
     password: "",
     confirmPassword: "",
-    securityQuestion: "",
-    securityAnswer: "",
+    security_question: "",
+    security_answer: "",
     phone: "",
     gender: "",
     dob: "",
     occupation: "",
     state: "",
     city: "",
+    created_at: "",
   });
+
+  interface Errors {
+    username?: string;
+    email?: string;
+    emailVerified?: string;
+    password?: string;
+    confirmPassword?: string;
+    security_question?: string;
+    security_answer?: string;
+    phone?: string;
+    gender?: string;
+    dob?: string;
+    occupation?: string;
+    city?: string;
+    state?: string;
+  }
 
   const [states, setStates] = useState<IState[]>([]);
   const [cities, setCities] = useState<string[]>([]);
@@ -67,6 +89,7 @@ export default function RegisterForm() {
       }
       const data = await response.json();
       console.log(data);
+      // TODO: add validation for the data received
       setActive(true);
     } catch (error: any) {
       console.error("Request failed:", error.message);
@@ -75,22 +98,6 @@ export default function RegisterForm() {
       setIsLoading(false);
     }
   };
-
-  interface Errors {
-    username?: string;
-    email?: string;
-    emailVerified?: string;
-    password?: string;
-    confirmPassword?: string;
-    securityQuestion?: string;
-    securityAnswer?: string;
-    phone?: string;
-    gender?: string;
-    dob?: string;
-    occupation?: string;
-    city?: string;
-    state?: string;
-  }
 
   const validatePageOne = (): Errors => {
     let errors: Errors = {};
@@ -104,13 +111,12 @@ export default function RegisterForm() {
       errors.confirmPassword = "Confirm Password is required";
     if (formData.password !== formData.confirmPassword)
       errors.confirmPassword = "Passwords do not match";
-    if (!formData.securityQuestion)
-      errors.securityQuestion = "Security question is required";
-    if (!formData.securityAnswer)
-      errors.securityAnswer = "Security answer is required";
+    if (!formData.security_question)
+      errors.security_question = "Security question is required";
+    if (!formData.security_answer)
+      errors.security_answer = "Security answer is required";
     if (!formData.phone || !/^[0-9]{10}$/.test(formData.phone))
       errors.phone = "Valid phone number is required";
-    console.log(errors);
     return errors;
   };
 
@@ -141,6 +147,7 @@ export default function RegisterForm() {
     const pageTwoErrors = validatePageTwo();
     if (Object.keys(pageTwoErrors).length === 0) {
       setIsLoading(true);
+      formData.created_at = new Date().toISOString();
       try {
         const response = await fetch(`${process.env.HOSTNAME}/user/register`, {
           method: "POST",
@@ -150,11 +157,17 @@ export default function RegisterForm() {
           body: JSON.stringify(formData),
         });
         const data = await response.json();
-        if (data.success) {
-          alert("User registered successfully");
-          // TODO: redirect to login page
+        // data output below
+        // {
+        //   "message": "user account created successfully",
+        //   "token": "JWT token",
+        // }
+        if (response.status === 200) {
+          // TODO: add a provider for toast messages
+          // pass the success message to the toast provider
+          window.location.href = "/login";
         } else {
-          alert("Error registering user");
+          alert(data.message || "Error registering user");
         }
       } catch (error) {
         console.error("Error:", error);
@@ -190,12 +203,6 @@ export default function RegisterForm() {
     const indianstates = State.getStatesOfCountry("IN");
     setStates(indianstates);
   }, []);
-
-  useEffect(() => {
-    if (emailIsVerified) {
-      setFormData({ ...formData, emailVerified: true });
-    }
-  }, [emailIsVerified]);
 
   useEffect(() => {
     if (selectedState) {
@@ -271,8 +278,10 @@ export default function RegisterForm() {
             </LabelInputContainer>
             {active && (
               <ExpandableOTPInput
-                emailIsVerified={emailIsVerified}
-                setEmailIsVerified={setEmailIsVerified}
+                formData={formData}
+                setFormData={setFormData}
+                errors={errors}
+                setErrors={setErrors}
                 email={formData.email}
                 active={active}
                 setActive={setActive}
@@ -280,6 +289,7 @@ export default function RegisterForm() {
             )}
             {!formData.emailVerified ? (
               <button
+                type="button"
                 className="w-3/12 relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
                 onClick={(e) => {
                   e.preventDefault();
@@ -337,52 +347,71 @@ export default function RegisterForm() {
               </div>
             )}
           </LabelInputContainer>
+
+          <LabelInputContainer className="mb-4">
+            <Input
+              id="phone"
+              placeholder="Phone Number"
+              type="number"
+              name="phone"
+              onChange={handleChange}
+            />
+            {errors.phone && (
+              <div className="flex items-center mt-1 ml-1">
+                <FontAwesomeIcon
+                  icon={faExclamationCircle}
+                  className="text-red-500 mr-1"
+                />
+                <p className="text-red-500 text-sm">{errors.phone}</p>
+              </div>
+            )}
+          </LabelInputContainer>
+
           <LabelInputContainer className="mb-4">
             <select
-              id="securityQuestion"
-              name="securityQuestion"
-              value={formData.securityQuestion}
+              id="security_question"
+              name="security_question"
+              value={formData.security_question}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 "
             >
+              {/* TODO: add the default options available in the db */}
               <option value="" disabled className="opacity-55">
                 Select a security question
               </option>
-              <option value="petName">What is your pet's name?</option>
-              <option value="birthCity">In which city were you born?</option>
-              <option value="firstSchool">
-                What is the name of your first school?
-              </option>
-              <option value="favoriteFood">What is your favorite food?</option>
+              <option value="1">What is your pet's name?</option>
+              <option value="2">In which city were you born?</option>
+              <option value="3">What is the name of your first school?</option>
+              <option value="4">What is your favorite food?</option>
             </select>
 
-            {errors.securityQuestion && (
+            {errors.security_question && (
               <div className="flex items-center mt-1 ml-1">
                 <FontAwesomeIcon
                   icon={faExclamationCircle}
                   className="text-red-500 mr-1"
                 />
                 <p className="text-red-500 text-sm">
-                  {errors.securityQuestion}
+                  {errors.security_question}
                 </p>
               </div>
             )}
           </LabelInputContainer>
           <LabelInputContainer className="mb-4">
             <Input
-              id="securityAnswer"
+              id="security_answer"
               placeholder="Security Answer"
               type="text"
-              name="securityAnswer"
+              name="security_answer"
               onChange={handleChange}
             />
-            {errors.securityAnswer && (
+            {errors.security_answer && (
               <div className="flex items-center mt-1 ml-1">
                 <FontAwesomeIcon
                   icon={faExclamationCircle}
                   className="text-red-500 mr-1"
                 />
-                <p className="text-red-500 text-sm">{errors.securityAnswer}</p>
+                <p className="text-red-500 text-sm">{errors.security_answer}</p>
               </div>
             )}
           </LabelInputContainer>
@@ -407,6 +436,7 @@ export default function RegisterForm() {
           <LabelInputContainer className="mb-4">
             <RadioGroup
               label="Select your favorite city"
+              name="gender"
               orientation="horizontal"
               onChange={handleChange}
               isInvalid={!!errors.gender}
@@ -442,7 +472,6 @@ export default function RegisterForm() {
               </option>
               <option value="student">Student</option>
               <option value="working_professional">Working Professional</option>
-              <option value="family">Family</option>
             </select>
             {errors.occupation && (
               <div className="flex items-center mt-1 ml-1">
@@ -511,6 +540,23 @@ export default function RegisterForm() {
 
           <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
         </form>
+      )}
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.5)",
+          }}
+        >
+          <Spinner size="lg" />
+        </div>
       )}
     </div>
   );
