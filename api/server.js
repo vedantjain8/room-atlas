@@ -11,7 +11,7 @@ const userRoutes = require("./routes/user/userRoutes");
 const listingRoutes = require("./routes/listing/listingRoutes");
 const chattingRoutes = require("./routes/chat/chattingRoutes");
 const verificationRoutes = require("./routes/user/verificationRoutes");
-const userProfileRoute = require("./routes/user/userProfileRoute");
+const userProfileRoutes = require("./routes/user/userProfileRoutes");
 const jwtRoutes = require("./routes/jwtRoutes");
 
 const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
@@ -46,7 +46,7 @@ app.use("/user", userRoutes);
 app.use("/listing", listingRoutes);
 app.use("/chat", chattingRoutes);
 app.use("/verify", verificationRoutes);
-app.use("/user", userProfileRoute);
+app.use("/user", userProfileRoutes);
 app.use(jwtRoutes);
 
 // app.use(jwtRoutes);
