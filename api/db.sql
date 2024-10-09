@@ -31,28 +31,6 @@ CREATE TABLE IF NOT EXISTS users (
     UNIQUE (username)
 );
 
-
-INSERT INTO preferences(preference) VALUES 
-('Vegetarian'),
-('Non-vegetarian'),
-('Drinker'),
-('Smoker'),
-('Sports-person'),
-('Morning-person'),
-('Night-owl');
-
-INSERT INTO security_questions(question) VALUES
-('What is your mothers maiden name?'),
-('What is the name of your first pet?'),
-('What is the name of the city where you were born?'),
-('What is the name of your favorite teacher?'),
-('What is the name of your favorite movie?'),
-('What is the name of your favorite book?'),
-('What is the name of your favorite song?'),
-('What is the name of your favorite food?'),
-('What is your favorite color?'),
-('What is the name of your favorite vacation spot?');
-
 CREATE TABLE IF NOT EXISTS preference_user_link(
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL, 
@@ -60,6 +38,31 @@ CREATE TABLE IF NOT EXISTS preference_user_link(
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (preference_id) REFERENCES preferences(preference_id),
     UNIQUE(user_id, preference_id)
+);
+
+CREATE TABLE IF NOT EXISTS refresh_token(
+    user_id int, 
+    token TEXT NOT NULL, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS amenities(
+    amenity_id SERIAL PRIMARY KEY,
+    amenities_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS listing(
+    property_id serial PRIMARY KEY,
+    property_title VARCHAR(255) NOT NULL,
+    property_desc TEXT,
+    images JSON,
+    uploadedBy int NOT NULL,
+    uploadedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    location TEXT NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    state VARCHAR(255) NOT NULL,
+    FOREIGN KEY (uploadedBy) REFERENCES users(user_id)
 );
 
 CREATE TABLE IF NOT EXISTS preference_listing_link (
@@ -71,28 +74,33 @@ CREATE TABLE IF NOT EXISTS preference_listing_link (
     UNIQUE(listing_id, preference_id)
   );
 
-CREATE TABLE IF NOT EXISTS refresh_token(
-    user_id int, 
-    token TEXT NOT NULL, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+CREATE TABLE IF NOT EXISTS listing_amenities(
+    id SERIAL PRIMARY KEY,
+    property_id INT NOT NULL,
+    amenity_id INT NOT NULL,
+    FOREIGN KEY (property_id) REFERENCES listing(property_id),
+    FOREIGN KEY (amenity_id) REFERENCES amenities(amenity_id),
+    UNIQUE(property_id, amenity_id)
 );
 
-CREATE TABLE IF NOT EXISTS listing(
-    property_id serial PRIMARY KEY,
-    property_title VARCHAR(255) NOT NULL,
-    property_desc TEXT NOT NULL,
-    images JSON,
-    uploadedBy int NOT NULL,
-    uploadedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    isAvailable BOOLEAN DEFAULT TRUE,
-    rentedOn TIMESTAMP DEFAULT NULL,
-    location VARCHAR(255) NOT NULL,
-    city VARCHAR(255) NOT NULL,
-    state VARCHAR(255) NOT NULL,
-    listingType INT NOT NULL,
-    FOREIGN KEY (uploadedBy) REFERENCES users(user_id),
+CREATE TABLE IF NOT EXISTS listing_metadata(
+    property_id INT PRIMARY KEY, 
+    property_type INT NOT NULL,
+    prefered_tenants INT NOT NULL,
+    is_available BOOLEAN DEFAULT TRUE,
+    bedrooms INT NOT NULL,
+    bathrooms INT NOT NULL,
+    rent DECIMAL(10,2) NOT NULL,
+    deposit DECIMAL(10,2) NOT NULL,
+    furnishing INT NOT NULL,
+    floor_no INT NOT NULL,
+    total_floors INT NOT NULL,
+    areasqft DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (property_id) REFERENCES listing(property_id)
 );
+-- property_type: 1- appartment, 2- villa, 3- bungalow
+-- prefered_tenants: 1- family, 2- students, 3- working professionals
+-- furnishing: 1- furnished, 2- semi-furnished, 3- unfurnished
 
 -- TODO: Add a trigger to update the listing stats table
 CREATE TABLE IF NOT EXISTS listing_stats(
@@ -152,3 +160,43 @@ CREATE TABLE IF NOT EXISTS image_upload_log(
     uploaded_on TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+INSERT INTO amenities (amenity_name) VALUES 
+('Pool'),
+('Gym'),
+('Parking'),
+('Lift'),
+('24x7 Security'),
+('Power Backup'),
+('Wi-Fi'),
+('CCTV Surveillance'),
+('Children Play Area'),
+('Garden'),
+('Club House'),
+('Fire Safety'),
+('Water Supply'),
+('Intercom Facility'),
+('Sports Complex');
+
+
+
+INSERT INTO preferences(preference) VALUES 
+('Vegetarian'),
+('Non-vegetarian'),
+('Drinker'),
+('Smoker'),
+('Sports-person'),
+('Morning-person'),
+('Night-owl');
+
+INSERT INTO security_questions(question) VALUES
+('What is your mothers maiden name?'),
+('What is the name of your first pet?'),
+('What is the name of the city where you were born?'),
+('What is the name of your favorite teacher?'),
+('What is the name of your favorite movie?'),
+('What is the name of your favorite book?'),
+('What is the name of your favorite song?'),
+('What is the name of your favorite food?'),
+('What is your favorite color?'),
+('What is the name of your favorite vacation spot?');

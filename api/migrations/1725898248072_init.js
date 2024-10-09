@@ -56,8 +56,13 @@ exports.up = (pgm) => {
     id: { type: "SERIAL", primaryKey: true },
     user_id: { type: "INT", notNull: true, references: "users" },
     preference_id: { type: "INT", notNull: true, references: "preferences" },
-    unique: ["user_id", "preference_id"],
   });
+
+  pgm.addConstraint(
+    "preference_user_link",
+    "unique_preference_user",
+    "UNIQUE (user_id, preference_id)"
+  );
 
   pgm.createTable("refresh_token", {
     user_id: { type: "INT", notNull: true, references: "users" },
@@ -72,7 +77,7 @@ exports.up = (pgm) => {
   pgm.createTable("listing", {
     property_id: { type: "serial", primaryKey: true },
     property_title: { type: "VARCHAR(255)", notNull: true },
-    property_desc: { type: "TEXT", notNull: true },
+    property_desc: { type: "TEXT" },
     images: { type: "JSON" },
     uploaded_by: { type: "INT", notNull: true, references: "users" },
     uploaded_on: {
@@ -82,10 +87,41 @@ exports.up = (pgm) => {
     },
     isAvailable: { type: "BOOLEAN", notNull: true, default: true },
     rentedOn: { type: "TIMESTAMP", default: null },
-    location: { type: "VARCHAR(255)", notNull: true },
+    location: { type: "TEXT", notNull: true },
     city: { type: "VARCHAR(255)", notNull: true },
     state: { type: "VARCHAR(255)", notNull: true },
-    listing_type: { type: "INT", notNull: true },
+  });
+
+  pgm.createTable("amenities", {
+    amenity_id: { type: "serial", primaryKey: true },
+    amenity_name: { type: "VARCHAR(255)", notNull: true },
+  });
+
+  pgm.createTable("listing_amenities", {
+    id: { type: "SERIAL", primaryKey: true },
+    property_id: { type: "INT", notNull: true, references: "listing" },
+    amenity_id: { type: "INT", notNull: true, references: "amenities" },
+  });
+
+  pgm.addConstraint(
+    "listing_amenities",
+    "unique_property_amenity",
+    "UNIQUE (property_id, amenity_id)"
+  );
+
+  pgm.createTable("listing_metadata", {
+    property_id: { type: "INT", notNull: true, references: "listing" },
+    property_type: { type: "INT", notNull: true },
+    prefered_tenants: { type: "INT", notNull: true },
+    is_available: { type: "BOOLEAN", notNull: true, default: true },
+    bedrooms: { type: "INT", notNull: true },
+    bathrooms: { type: "INT", notNull: true },
+    rent: { type: "DECIMAL(10, 2)", notNull: true },
+    deposit: { type: "DECIMAL(10, 2)", notNull: true },
+    furnishing: { type: "INT", notNull: true },
+    floor: { type: "INT", notNull: true },
+    total_floors: { type: "INT", notNull: true },
+    areasqft: { type: "DECIMAL(10, 2)", notNull: true },
   });
 
   pgm.createTable("listing_stats", {
@@ -148,9 +184,21 @@ exports.up = (pgm) => {
   pgm.createTable("image_upload_log", {
     id: { type: "serial", primaryKey: true },
     user_id: { type: "INT", notNull: true, references: "users" },
-    image_path: { type: "TEXT", notNull: true },
-    uploaded_on: {
-      type: "timestamp",
+    image_path: { type: "VARCHAR(255)", notNull: true },
+    uploaded_at: {
+      type: "TIMESTAMP",
+      notNull: true,
+      default: pgm.func("current_timestamp"),
+    },
+  });
+
+  pgm.createTable("feedback", {
+    id: { type: "serial", primaryKey: true },
+    name: { type: "INT", notNull: true, references: "users" },
+    email: { type: "VARCHAR(255)", notNull: true },
+    feedback: { type: "TEXT", notNull: true },
+    created_at: {
+      type: "TIMESTAMP",
       notNull: true,
       default: pgm.func("current_timestamp"),
     },
@@ -177,6 +225,23 @@ exports.up = (pgm) => {
   ('What is your favorite color?'),
   ('What is the name of your favorite vacation spot?');
 
+  INSERT INTO amenities (amenity_name)
+  VALUES 
+  ('Pool'),
+  ('Gym'),
+  ('Parking'),
+  ('Lift'),
+  ('24x7 Security'),
+  ('Power Backup'),
+  ('Wi-Fi'),
+  ('CCTV Surveillance'),
+  ('Children Play Area'),
+  ('Garden'),
+  ('Club House'),
+  ('Fire Safety'),
+  ('Water Supply'),
+  ('Intercom Facility'),
+  ('Sports Complex');
 
   INSERT INTO users (
     username,
@@ -217,16 +282,20 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
+  pgm.dropTable("feedback");
   pgm.dropTable("image_upload_log");
   pgm.dropTable("property_ratings");
   pgm.dropTable("user_ratings");
   pgm.dropTable("messages");
   pgm.dropTable("report");
   pgm.dropTable("listing_stats");
+  pgm.dropTable("listing_metadata");
+  pgm.dropTable("listing_amenities");
+  pgm.dropTable("amenities");
   pgm.dropTable("listing");
   pgm.dropTable("refresh_token");
-  pgm.dropTable("preference_user_link")
+  pgm.dropTable("preference_user_link");
+  pgm.dropTable("preferences");
   pgm.dropTable("users");
   pgm.dropTable("security_questions");
-  pgm.dropTable("preferences");
 };
