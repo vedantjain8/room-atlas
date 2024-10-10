@@ -185,7 +185,7 @@ exports.up = (pgm) => {
     id: { type: "serial", primaryKey: true },
     user_id: { type: "INT", notNull: true, references: "users" },
     image_path: { type: "VARCHAR(255)", notNull: true },
-    uploaded_at: {
+    uploaded_on: {
       type: "TIMESTAMP",
       notNull: true,
       default: pgm.func("current_timestamp"),

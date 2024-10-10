@@ -16,6 +16,9 @@ const jwtRoutes = require("./routes/jwtRoutes");
 
 const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
 
+// cron jobs
+require("./jobs/cron24hr");
+
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);

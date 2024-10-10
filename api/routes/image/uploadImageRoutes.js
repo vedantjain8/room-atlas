@@ -39,7 +39,6 @@ router.post(
         .toFile(profile_folder + ref);
       const link = `/assets/profile/${ref}`;
 
-      // TODO: insert log into database
       await redisClient.hSet(
         "ImageUploadLog",
         `${ref}`,
