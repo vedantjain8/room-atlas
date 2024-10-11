@@ -9,7 +9,7 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token, privkey, (err, user) => {
     if (err) {
-      console.error(err);
+      console.error(`Middleware auth token error: ${err}`);
       return res.sendStatus(401);
     }
     req.user = user;
@@ -17,8 +17,6 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
-
-
 
 // {
 //   "message": "This is a protected route",
@@ -29,5 +27,3 @@ function authenticateToken(req, res, next) {
 //   }
 // }
 module.exports = { authenticateToken };
-
-

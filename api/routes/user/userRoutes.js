@@ -151,8 +151,6 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   let { loginIdentifier, identifier, password } = req.body;
   let query;
-  console.log(loginIdentifier, identifier);
-  // username or email, query builder use query from variable
 
   if (!identifier) {
     return res.status(400).json({ message: "Username or email is required" });
@@ -176,7 +174,7 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ message: "Enter a valid password" });
   }
 
-  query = `SELECT pass_hash from users where ${loginIdentifier}='${identifier}'`;
+  query = `SELECT user_id, pass_hash from users where ${loginIdentifier}='${identifier}'`;
   try {
     const pass_hash_result = await pool.query(query);
 
@@ -185,6 +183,7 @@ router.post("/login", async (req, res) => {
     }
 
     const pass_hash = pass_hash_result.rows[0].pass_hash;
+    const user_id = pass_hash_result.rows[0].user_id;
 
     const passwordCorrect = await checkString(password, pass_hash);
 
@@ -192,11 +191,17 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const refreshToken = generateRefreshToken(identifier);
+    const refreshToken = generateRefreshToken(user_id);
+    const accessToken = generateAccessToken(user_id);
+
+    await pool.query(
+      "INSERT INTO refresh_token(user_id, token) values ($1, $2)",
+      [user_id, refreshToken]
+    );
 
     return res
       .status(200)
-      .json({ message: "Login successful", token: refreshToken });
+      .json({ message: "Login successful", token: accessToken });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });
