@@ -4,28 +4,38 @@ const { authenticateToken } = require("../../middleware/jwtMiddleware");
 
 const router = express.Router();
 
-// pages/api/feedback.js
-import pool from '../../lib/db';
+// POST request to handle feedback submission
+router.post("/feedback", authenticateToken, async (req, res) => {
+  const { name, email, message } = req.body;
 
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    const { name, email, message } = req.body;
-
-    if (!name || !email || !message) {
-      return res.status(400).json({ error: 'All fields are required.' });
-    }
-
-    try {
-      const query = 'INSERT INTO feedback(name, email, message) VALUES($1, $2, $3) RETURNING *';
-      const values = [name, email, message];
-      const result = await pool.query(query, values);
-      res.status(200).json({ success: true, feedback: result.rows[0] });
-    } catch (error) {
-      console.error('Error saving feedback:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).json({ error: `Method ${req.method} not allowed` });
+  // Validating the required fields
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: "All fields are required." });
   }
-}
+
+  try {
+    const query = `
+      INSERT INTO feedback (name, email, message)
+      VALUES ($1, $2, $3)
+      RETURNING *;
+    `;
+    const values = [name, email, message];
+    
+    const result = await pool.query(query, values);
+
+    // Successfully inserting feedback
+    return res.status(201).json({ message: "Submitted successfully", feedback: result.rows[0] });
+  } catch (error) {
+    // Handling server-side errors
+    console.error("Error saving feedback:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// Method not allowed for any request other than POST
+router.use((req, res) => {
+  res.setHeader("Allow", ["POST"]);
+  return res.status(405).json({ message: `Method ${req.method} not allowed` });
+});
+
+module.exports = router;

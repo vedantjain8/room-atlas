@@ -194,7 +194,7 @@ exports.up = (pgm) => {
 
   pgm.createTable("feedback", {
     id: { type: "serial", primaryKey: true },
-    name: { type: "INT", notNull: true, references: "users" },
+    name: { type: "VARCHAR(255)", notNull: true },
     email: { type: "VARCHAR(255)", notNull: true },
     feedback: { type: "TEXT", notNull: true },
     created_at: {
@@ -203,7 +203,7 @@ exports.up = (pgm) => {
       default: pgm.func("current_timestamp"),
     },
   });
-
+ 
   pgm.sql(`INSERT INTO preferences(preference) VALUES 
   ('Vegetarian'),
   ('Non-vegetarian'),

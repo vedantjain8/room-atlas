@@ -200,3 +200,12 @@ INSERT INTO security_questions(question) VALUES
 ('What is the name of your favorite food?'),
 ('What is your favorite color?'),
 ('What is the name of your favorite vacation spot?');
+
+
+CREATE TABLE IF NOT EXISTS feedback (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(100),
+  feedback TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
