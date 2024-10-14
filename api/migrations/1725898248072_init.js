@@ -194,7 +194,7 @@ exports.up = (pgm) => {
 
   pgm.createTable("feedback", {
     id: { type: "serial", primaryKey: true },
-    name: { type: "INT", notNull: true, references: "users" },
+    name: { type: "VARCHAR(100)", notNull: true, references: "users" },
     email: { type: "VARCHAR(255)", notNull: true },
     feedback: { type: "TEXT", notNull: true },
     created_at: {

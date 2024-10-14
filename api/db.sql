@@ -161,6 +161,14 @@ CREATE TABLE IF NOT EXISTS image_upload_log(
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS feedback (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    feedback TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT INTO amenities (amenity_name) VALUES 
 ('Pool'),
 ('Gym'),
