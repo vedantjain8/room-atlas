@@ -115,7 +115,7 @@ router.post("/register", async (req, res) => {
       city,
       state,
       verified_email
-      ) VALUES ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning userid`,
+      ) VALUES ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning user_id`,
       [
         username,
         email,
@@ -135,7 +135,7 @@ router.post("/register", async (req, res) => {
     const userID = userData.rows[0].userid;
 
     await pool.query(
-      "INSERT INTO refresh_token(userid, token) values ($1, $2)",
+      "INSERT INTO refresh_token(user_id, token) values ($1, $2)",
       [userID, refreshToken]
     );
     return res.status(200).json({
