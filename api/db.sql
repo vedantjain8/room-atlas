@@ -53,9 +53,9 @@ CREATE TABLE IF NOT EXISTS amenities(
 );
 
 CREATE TABLE IF NOT EXISTS listing(
-    property_id serial PRIMARY KEY,
-    property_title VARCHAR(255) NOT NULL,
-    property_desc TEXT,
+    listing_id serial PRIMARY KEY,
+    listing_title VARCHAR(255) NOT NULL,
+    listing_desc TEXT,
     images JSON,
     uploadedBy int NOT NULL,
     uploadedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -69,23 +69,23 @@ CREATE TABLE IF NOT EXISTS preference_listing_link (
     id SERIAL PRIMARY KEY,
     listing_id INT NOT NULL,
     preference_id INT NOT NULL,
-    FOREIGN KEY (listing_id) REFERENCES listing(property_id),
+    FOREIGN KEY (listing_id) REFERENCES listing(listing_id),
     FOREIGN KEY (preference_id) REFERENCES preferences(preference_id),
     UNIQUE(listing_id, preference_id)
   );
 
 CREATE TABLE IF NOT EXISTS listing_amenities(
     id SERIAL PRIMARY KEY,
-    property_id INT NOT NULL,
+    listing_id INT NOT NULL,
     amenity_id INT NOT NULL,
-    FOREIGN KEY (property_id) REFERENCES listing(property_id),
+    FOREIGN KEY (listing_id) REFERENCES listing(listing_id),
     FOREIGN KEY (amenity_id) REFERENCES amenities(amenity_id),
-    UNIQUE(property_id, amenity_id)
+    UNIQUE(listing_id, amenity_id)
 );
 
 CREATE TABLE IF NOT EXISTS listing_metadata(
-    property_id INT PRIMARY KEY, 
-    property_type INT NOT NULL,
+    listing_id INT PRIMARY KEY, 
+    listing_type INT NOT NULL,
     prefered_tenants INT NOT NULL,
     is_available BOOLEAN DEFAULT TRUE,
     bedrooms INT NOT NULL,
@@ -96,19 +96,19 @@ CREATE TABLE IF NOT EXISTS listing_metadata(
     floor_no INT NOT NULL,
     total_floors INT NOT NULL,
     areasqft DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (property_id) REFERENCES listing(property_id)
+    FOREIGN KEY (listing_id) REFERENCES listing(listing_id)
 );
--- property_type: 1- appartment, 2- villa, 3- bungalow
+-- listing_type: 1- appartment, 2- villa, 3- bungalow
 -- prefered_tenants: 1- family, 2- students, 3- working professionals
 -- furnishing: 1- furnished, 2- semi-furnished, 3- unfurnished
 
 -- TODO: Add a trigger to update the listing stats table
 CREATE TABLE IF NOT EXISTS listing_stats(
-    property_id int PRIMARY KEY,
+    listing_id int PRIMARY KEY,
     views int DEFAULT 0,
     likes int DEFAULT 0,
     shares int default 0,
-    FOREIGN KEY (property_id) REFERENCES listing(property_id)
+    FOREIGN KEY (listing_id) REFERENCES listing(listing_id)
 );
 
 CREATE TABLE IF NOT EXISTS report(
@@ -116,9 +116,9 @@ CREATE TABLE IF NOT EXISTS report(
     reported_by int NOT NULL,
     reported_on TIMESTAMP DEFAULT NOW(),
     reported_for TEXT NOT NULL,
-    property_id int NOT NULL,
+    listing_id int NOT NULL,
     FOREIGN KEY (reported_by) REFERENCES users(user_id),
-    FOREIGN KEY (property_id) REFERENCES listing(property_id)
+    FOREIGN KEY (listing_id) REFERENCES listing(listing_id)
 );
 
 CREATE TABLE IF NOT EXISTS messages(
@@ -142,14 +142,14 @@ CREATE TABLE IF NOT EXISTS user_ratings (
     FOREIGN KEY (rated_by) REFERENCES users(user_id)
 );
 
-CREATE TABLE IF NOT EXISTS property_ratings (
+CREATE TABLE IF NOT EXISTS listing_ratings (
     id SERIAL PRIMARY KEY ,
-    property_id INT NOT NULL, 
+    listing_id INT NOT NULL, 
     ratings DECIMAL(2,1) NOT NULL , 
     comments VARCHAR(255) DEFAULT NULL , 
     rated_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    FOREIGN KEY property_id REFERENCES listing(property_id),
+    FOREIGN KEY listing_id REFERENCES listing(listing_id),
     FOREIGN KEY (reviewer_id) REFERENCES users(user_id)
 );
 
@@ -178,13 +178,10 @@ INSERT INTO amenities (amenity_name) VALUES
 ('Power Backup'),
 ('Wi-Fi'),
 ('CCTV Surveillance'),
-('Children Play Area'),
 ('Garden'),
 ('Club House'),
 ('Fire Safety'),
-('Water Supply'),
-('Intercom Facility'),
-('Sports Complex');
+('Water Supply');
 
 
 

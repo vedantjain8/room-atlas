@@ -8,17 +8,68 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   const offset = req.query.offset || 0;
-  const result = await pool.query("SELECT * from listing LIMIT 20 offset $1", [
-    offset,
-  ]);
+  const result = await pool.query(`
+    SELECT 
+    listing.listing_id,
+    listing.listing_title,
+    listing.listing_desc,
+    listing.images,
+    listing.uploaded_by,
+    listing.is_available,
+    listing.rented_on,
+    listing.location,
+    listing.city,
+    listing.state,
+    lm.listing_type,
+    lm.prefered_tenants,
+    lm.is_available,
+    lm.bedrooms,
+    lm.bathrooms,
+    lm.rent,
+    lm.deposit,
+    lm.furnishing,
+    lm.floor,
+    lm.total_floors,
+    lm.areasqft,
+    ARRAY_AGG(a.amenity_name) AS amenities -- Add the missing comma before this line
+FROM
+    listing
+JOIN 
+    listing_metadata lm
+ON 
+    listing.listing_id = lm.listing_id
+LEFT JOIN 
+    listing_amenities la
+ON 
+    listing.listing_id = la.listing_id
+LEFT JOIN
+    amenities a
+ON
+    la.amenity_id = a.amenity_id 
+GROUP BY 
+    listing.listing_id,
+    lm.listing_type,
+    lm.prefered_tenants,
+    lm.is_available,
+    lm.bedrooms,
+    lm.bathrooms,
+    lm.rent,
+    lm.deposit,
+    lm.furnishing,
+    lm.floor,
+    lm.total_floors,
+    lm.areasqft
+    LIMIT 20 offset $1`,
+    [offset]);
+
 
   return res.status(200).json({ message: "Listing", data: result.rows });
 });
 
 router.post("/create", authenticateToken, async (req, res) => {
   let {
-    property_title,
-    property_desc = null,
+    listing_title,
+    listing_desc = null,
     image_json,
     uploaded_on,
     location_pin,
@@ -26,7 +77,7 @@ router.post("/create", authenticateToken, async (req, res) => {
     state,
     preference_list = [],
     amenities_list = [],
-    property_type, // Appartment, villa, bungalow
+    listing_type, // Appartment, villa, bungalow
     prefered_tenants, // Family, bachelor, students
     is_available,
     bedrooms,
@@ -39,8 +90,8 @@ router.post("/create", authenticateToken, async (req, res) => {
     areasqft,
   } = req.body;
 
-  if (!property_title)
-    return res.status(400).json({ message: "Enter a valid property title" });
+  if (!listing_title)
+    return res.status(400).json({ message: "Enter a valid listing title" });
 
   // optional description
 
@@ -57,9 +108,9 @@ router.post("/create", authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "Enter atleast one photo" });
 
   if (
-    isNaN(property_type) ? !1 : ((x = parseInt(property_type)), (0 | x) === x)
+    isNaN(listing_type) ? !1 : ((x = parseInt(listing_type)), (0 | x) === x)
   )
-    return res.status(400).json({ message: "Enter a valid property_type" });
+    return res.status(400).json({ message: "Enter a valid listing_type" });
 
   if (
     isNaN(prefered_tenants)
@@ -97,11 +148,11 @@ router.post("/create", authenticateToken, async (req, res) => {
 
   try {
     const listing_result = await pool.query(
-      `INSERT INTO listing (property_title, property_desc, images, uploadedBy, uploadedOn, location, city, state) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning property_id`,
+      `INSERT INTO listing (listing_title, listing_desc, images, uploadedBy, uploadedOn, location, city, state) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning listing_id`,
       [
-        property_title,
-        property_desc,
+        listing_title,
+        listing_desc,
         image_json,
         req.user.user_id,
         uploaded_on,
@@ -111,7 +162,7 @@ router.post("/create", authenticateToken, async (req, res) => {
       ]
     );
 
-    const listing_id = listing_result.rows[0].property_id;
+    const listing_id = listing_result.rows[0].listing_id;
 
     // if (preference_list.length > 0) {
     //   for (const preferences of preference_list) {
@@ -144,24 +195,24 @@ router.post("/create", authenticateToken, async (req, res) => {
         SELECT $1, UNNEST($2::INT[])
         ON CONFLICT (listing_id, preference_id) DO NOTHING;
       `;
-      await client.query(preferenceQuery, [property_id, preference_list]);
+      await client.query(preferenceQuery, [listing_id, preference_list]);
     }
 
     // Batch insert amenities (if any)
     if (amenities_list && amenities_list.length > 0) {
       const amenitiesQuery = `
-        INSERT INTO listing_amenities (property_id, amenity_id)
+        INSERT INTO listing_amenities (listing_id, amenity_id)
         SELECT $1, UNNEST($2::INT[])
-        ON CONFLICT (property_id, amenity_id) DO NOTHING;
+        ON CONFLICT (listing_id, amenity_id) DO NOTHING;
       `;
-      await client.query(amenitiesQuery, [property_id, amenities_list]);
+      await client.query(amenitiesQuery, [listing_id, amenities_list]);
     }
 
     await pool.query(
       "INSERT INTO listing_metadata VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
       [
         listing_id,
-        property_type,
+        listing_type,
         prefered_tenants,
         is_available,
         bedrooms,
@@ -210,7 +261,7 @@ router.get("/:id", async (req, res) => {
 
     // TODO: show only required fields
     const result = await pool.query(
-      "SELECT * FROM listing WHERE property_id = $1",
+      "SELECT * FROM listing WHERE listing_id = $1",
       [listingId]
     );
 

@@ -17,7 +17,7 @@ module.exports = (io, pool) => {
     socket.on("chatMessage", async ({ sender, receiver, message }) => {
       // Insert message into database
       const query = `
-                INSERT INTO msg (sender_id, receiver_id, message)
+                INSERT INTO messages (sender_id, receiver_id, message)
                 VALUES ($1, $2, $3)
             `;
       await pool.query(query, [sender, receiver, message]);

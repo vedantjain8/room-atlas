@@ -22,8 +22,6 @@ require("./jobs/cron24hr");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
-initSocket(io, pool);
 
 app.use(bodyParser.json());
 app.use(express.static("public"));
@@ -60,6 +58,9 @@ app.get("/ping", (req, res) => {
   console.log(res);
   return res.status(200).json({ message: `Pong` });
 });
+
+const io = socketio(server);
+initSocket(io, pool);
 
 process.on("SIGINT", async () => {
   console.log("Ctrl-C was pressed");

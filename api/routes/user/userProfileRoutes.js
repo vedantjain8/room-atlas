@@ -71,7 +71,7 @@ router.get("/profile/:username/listing", authenticateToken, async function (req,
 
   try {
     const result = await pool.query(
-      "SELECT property_id, property_title, property_desc, images, uploaded_by, uploaded_on, location, listing.city, listing.state FROM listing LEFT JOIN users on listing.uploaded_by = users.user_id WHERE users.username = $1 LIMIT 20 OFFSET $2",
+      "SELECT listing_id, listing_title, listing_desc, images, uploaded_by, uploaded_on, location, listing.city, listing.state FROM listing LEFT JOIN users on listing.uploaded_by = users.user_id WHERE users.username = $1 LIMIT 20 OFFSET $2",
       [username, offset]
     );
     return res.status(200).json({
