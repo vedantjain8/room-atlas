@@ -1,21 +1,24 @@
 "use client";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
-  Checkbox,
-  Divider,
-  Input,
-  Slider,
-} from "@nextui-org/react";
-import { SearchIcon } from "@/components/SearchIcon";
+import React, { useState, useEffect } from "react";
 import ListingCard from "@/components/ListingCard";
-import { useState, useEffect } from "react";
+import { Button } from "@nextui-org/react";
 
-export default function Flat() {
-  const [listingData, setListingData] = useState<any[]>([]);
+interface ListingData {
+  listing_title: string;
+  location: string;
+  images: string[];
+  rent: number;
+  deposit: number;
+  areasqft: number;
+  listing_type: number;
+  prefered_tenants: number;
+  furnishing: number;
+  is_available: boolean;
+  amenities: string[];
+}
+
+const ListingsPage: React.FC = () => {
+  const [listingData, setListingData] = useState<ListingData[]>([]);
 
   const showListing = async () => {
     try {
@@ -26,7 +29,8 @@ export default function Flat() {
         throw new Error("Failed to fetch listings.");
       }
       const data = await response.json();
-      setListingData(data.data); // Set the data to state
+      // setListingData(data.data);
+      setListingData((prevData) => [...prevData, ...data.data]);
     } catch (error) {
       console.error("Error fetching listings:", error);
     }
@@ -34,105 +38,53 @@ export default function Flat() {
 
   useEffect(() => {
     showListing();
-  }, []); // Call the function when the component mounts
+  }, []);
 
+  // TODO: grey out the card if listing is not available
+  // TODO: add a loading spinner while fetching data
+  // TODO: add skeleton loading for each card
+  // TODO: add infinite pagination
   return (
-    <>
-      <div className="flex">
-        <div className="flex flex-row w-full mt-10">
-          <div className="w-3/12 mr-5 ml-10 mt-16">
-            <Card className="rounded-none fixed overflow-y-auto h-4/5">
-              <CardHeader className="flex justify-between bg-sky-600 text-white rounded-none">
-                <h1>Filter</h1>
-                <h1 className="cursor-pointer">Reset</h1>
-              </CardHeader>
-              <Divider />
-              <CardBody>
-                <div>
-                  <h2>BHK</h2>
-                  <div className="grid grid-cols-2 pt-4 pb-4">
-                    <Checkbox radius="none">1BHK</Checkbox>
-                    <Checkbox radius="none">2BHK</Checkbox>
-                    <Checkbox radius="none">3BHK</Checkbox>
-                    <Checkbox radius="none">4BHK</Checkbox>
-                  </div>
-                </div>
-                <div className="mb-5">
-                  <Slider
-                    label="Rent Range"
-                    color="primary"
-                    minValue={10000}
-                    maxValue={50000}
-                    step={2500}
-                    defaultValue={[10000, 40000]}
-                  />
-                  <Slider
-                    className="text-2xl"
-                    label="Deposit Range"
-                    minValue={10000}
-                    maxValue={50000}
-                    step={5000}
-                    defaultValue={[10000, 40000]}
-                  ></Slider>
-                </div>
-                {/* Other filters go here */}
-              </CardBody>
-              <Divider />
-              <CardFooter className="flex justify-center">
-                <div className="p-2 border-solid">
-                  <Button
-                    className="text-md bg-sky-600 text-white"
-                    radius="none"
-                  >
-                    Apply Filters
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          </div>
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 mt-20">
+      {/* Sidebar */}
+      <aside className="md:w-1/4 lg:w-1/6 bg-white shadow-lg p-6">
+        <h2 className="text-lg font-bold mb-4">Filter Listings</h2>
+        <ul>
+          <li className="py-2 text-gray-700">Price Range</li>
+          <li className="py-2 text-gray-700">Bedrooms</li>
+          <li className="py-2 text-gray-700">Furnishing</li>
+          <li className="py-2 text-gray-700">Location</li>
+        </ul>
+      </aside>
 
-          <div className="flex flex-col w-7/12 ml-16">
-            <div className="flex justify-between items-end w-7/12 fixed top-16 z-20 h-16 pl-1 pr-1 ml-2 mr-2 pb-1 bg-white/30 rounded-lg shadow-md backdrop-blur-lg">
-              <Input
-                className="placeholder-zinc-600 w-7/12"
-                placeholder="Search flats..."
-                type="search"
-                startContent={
-                  <SearchIcon className="text-black/50 mb-0.5 dark:text-white/90 text-slate-400 pointer-events-none flex-shrink-0" />
-                }
-              ></Input>
-              <Button className="bg-sky-600 text-white rounded-md">
-                Filter
-              </Button>
-            </div>
-
-            {/* Display fetched listings */}
-            {/* show skeleton code */}
-            <div className="classList flex flex-col justify-between p-3 pl-1 w-full mt-24">
-              <button onClick={() => console.log(listingData)}>show</button>
-              {listingData.length > 0 ? (
-                listingData.map((listing: any, index: number) => (
-                  <ListingCard
-                    key={index}
-                    title={listing.listing_title}
-                    location={listing.location}
-                    image={listing.images || ["/path/to/default-image.png"]}
-                    rent={listing.rent}
-                    deposit={listing.deposit}
-                    areasqft={listing.areasqft}
-                    listingType={listing.listing_type}
-                    preferedTenants={listing.prefered_tenants}
-                    furnishing={listing.furnishing}
-                    available={listing.is_available}
-                  />
-                ))
-              ) : (
-                <p>No listings found</p>
-              )}
-            </div>
-          </div>
+      {/* Main Content - Listings Grid */}
+      <main className="flex-1 p-6">
+        <h1 className="text-2xl font-bold mb-6">Available Listings</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {listingData.length > 0 ? (
+            listingData.map((listing, index) => (
+              <ListingCard
+                key={index}
+                title={listing.listing_title}
+                location={listing.location}
+                image={listing.images || ["/path/to/default-image.png"]}
+                rent={listing.rent}
+                deposit={listing.deposit}
+                areasqft={listing.areasqft}
+                listingType={listing.listing_type}
+                preferedTenants={listing.prefered_tenants}
+                furnishing={listing.furnishing}
+                available={listing.is_available}
+                amenities={listing.amenities}
+              />
+            ))
+          ) : (
+            <p>No listings found</p>
+          )}
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
-}
+};
+
+export default ListingsPage;
