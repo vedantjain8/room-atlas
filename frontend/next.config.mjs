@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   env: {
-    HOSTNAME: process.env.HOSTNAME,
-  }
+    NEXT_PUBLIC_HOSTNAME: process.env.HOSTNAME,
+  },
 };
 
 export default nextConfig;

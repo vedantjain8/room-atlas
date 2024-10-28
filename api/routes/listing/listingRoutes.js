@@ -1,14 +1,21 @@
 const express = require("express");
 const pool = require("../../config/db");
+const redisClient = require("../../config/dbredis");
 const { authenticateToken } = require("../../middleware/jwtMiddleware");
+const settings = require("../../config/settings");
 
 const router = express.Router();
 
 // TODO: check for phone number is verified or not while creating new listing
 
 router.get("/", async (req, res) => {
-  const offset = req.query.offset || 0;
-  const result = await pool.query(`
+  const offset = Number(req.query.offset) || 0;
+  let data = await redisClient.get(`listings-${offset}`);
+  if (data) {
+    return res.status(200).json({ message: "Listing", data: JSON.parse(data) });
+  }
+  const result = await pool.query(
+    `
     SELECT 
     listing.listing_id,
     listing.listing_title,
@@ -31,7 +38,7 @@ router.get("/", async (req, res) => {
     lm.floor,
     lm.total_floors,
     lm.areasqft,
-    ARRAY_AGG(a.amenity_name) AS amenities -- Add the missing comma before this line
+    ARRAY_AGG(a.amenity_name) AS amenities
 FROM
     listing
 JOIN 
@@ -59,9 +66,11 @@ GROUP BY
     lm.floor,
     lm.total_floors,
     lm.areasqft
-    LIMIT 20 offset $1`,
-    [offset]);
+    LIMIT ${settings.database.limit} offset $1`,
+    [offset]
+  );
 
+  await redisClient.set(`listings-${offset}`, JSON.stringify(result.rows));
 
   return res.status(200).json({ message: "Listing", data: result.rows });
 });
@@ -107,9 +116,7 @@ router.post("/create", authenticateToken, async (req, res) => {
   if (!image_json)
     return res.status(400).json({ message: "Enter atleast one photo" });
 
-  if (
-    isNaN(listing_type) ? !1 : ((x = parseInt(listing_type)), (0 | x) === x)
-  )
+  if (isNaN(listing_type) ? !1 : ((x = parseInt(listing_type)), (0 | x) === x))
     return res.status(400).json({ message: "Enter a valid listing_type" });
 
   if (
@@ -188,7 +195,7 @@ router.post("/create", authenticateToken, async (req, res) => {
     //     );
     //   }
     // }
-    
+
     if (preference_list && preference_list.length > 0) {
       const preferenceQuery = `
         INSERT INTO preference_listing_link (listing_id, preference_id)

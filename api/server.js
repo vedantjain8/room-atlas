@@ -16,6 +16,7 @@ const feedbackRoutes = require("./routes/pages/feedbackRoutes");
 const jwtRoutes = require("./routes/jwtRoutes");
 
 const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
+const settings = require("./config/settings");
 
 // cron jobs
 require("./jobs/cron24hr");
@@ -67,6 +68,6 @@ process.on("SIGINT", async () => {
   process.exit();
 });
 
-server.listen(3100, () => {
-  console.log("Server started on port 3100");
+server.listen(settings.server.port, () => {
+  console.log(`Server started on port ${settings.server.port}`);
 });

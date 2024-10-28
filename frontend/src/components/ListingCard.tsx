@@ -74,6 +74,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
     <Card
       className="hover:shadow-lg transition-shadow rounded-lg w-full max-w-s"
       isHoverable
+      style={{
+        opacity: available ? 1 : 0.5,
+        filter: available ? "none" : "grayscale(100%)",
+      }}
     >
       <CardHeader className="flex items-center justify-between p-4">
         <h4 className="font-semibold">{title}</h4>
@@ -91,7 +95,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         <div className="w-full h-60 overflow-hidden rounded-t-lg">
           <Image
             src={
-              `${process.env.HOSTNAME}/${image[0]}` ||
+              `${process.env.NEXT_PUBLIC_HOSTNAME}/${image[0]}` ||
               "/path/to/default-image.png"
             }
             alt={title}
