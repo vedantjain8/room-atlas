@@ -20,6 +20,7 @@ const settings = require("./config/settings");
 
 // cron jobs
 require("./jobs/cron24hr");
+require("./jobs/cron10sec");
 
 const app = express();
 const server = http.createServer(app);

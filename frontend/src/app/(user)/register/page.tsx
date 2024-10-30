@@ -57,6 +57,7 @@ export default function RegisterForm() {
   const [states, setStates] = useState<IState[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [selectedState, setSelectedstate] = useState(null);
+  const [securityQuestions, setSecurityQuestions] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -199,9 +200,23 @@ export default function RegisterForm() {
     setErrors({ ...errors, dob: undefined });
   };
 
+  async function fetchQuestion() {
+    const questionsList = await fetch(
+      `${process.env.NEXT_PUBLIC_HOSTNAME}/user/securityQuestions`,
+      {
+        method: "GET",
+        cache: "force-cache",
+      }
+    );
+
+    const questions = await questionsList.json();
+    return questions;
+  }
+
   useEffect(() => {
     const indianstates = State.getStatesOfCountry("IN");
     setStates(indianstates);
+    fetchQuestion().then((questions) => setSecurityQuestions(questions));
   }, []);
 
   useEffect(() => {
@@ -379,10 +394,11 @@ export default function RegisterForm() {
               <option value="" disabled className="opacity-55">
                 Select a security question
               </option>
-              <option value="1">What is your pet's name?</option>
-              <option value="2">In which city were you born?</option>
-              <option value="3">What is the name of your first school?</option>
-              <option value="4">What is your favorite food?</option>
+              {securityQuestions.map((question: any, index: number) => (
+                <option key={index + 1} value={index + 1}>
+                  {question}
+                </option>
+              ))}
             </select>
 
             {errors.security_question && (
