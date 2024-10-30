@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
     occupation VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
     state VARCHAR(255) NOT NULL,
-    verified_email BOOLEAN DEFAULT FALSE,
+    email_verified BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (question) REFERENCES security_questions(questionID),
     UNIQUE (username)
 );
@@ -102,7 +102,6 @@ CREATE TABLE IF NOT EXISTS listing_metadata(
 -- prefered_tenants: 1- family, 2- students, 3- working professionals
 -- furnishing: 1- furnished, 2- semi-furnished, 3- unfurnished
 
--- TODO: Add a trigger to update the listing stats table
 CREATE TABLE IF NOT EXISTS listing_stats(
     listing_id int PRIMARY KEY,
     views int DEFAULT 0,
@@ -110,6 +109,20 @@ CREATE TABLE IF NOT EXISTS listing_stats(
     shares int default 0,
     FOREIGN KEY (listing_id) REFERENCES listing(listing_id)
 );
+
+CREATE OR REPLACE FUNCTION listing_stats_insert_function()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO listing_stats (listing_id, views, likes, shares)
+  VALUES (NEW.listing_id, 0, 0, 0);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER listing_stats_insert_trigger
+AFTER INSERT ON listing_stats
+FOR EACH ROW
+EXECUTE FUNCTION community_stats_insert_function();
 
 CREATE TABLE IF NOT EXISTS report(
     report_id serial PRIMARY KEY,

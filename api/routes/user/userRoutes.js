@@ -82,8 +82,12 @@ router.post("/register", async (req, res) => {
     return res.status(400).json({ message: "Enter a valid password" });
   }
 
+  if (!security_question) {
+    return res.status(400).json({ message: "Enter a valid security_question" });
+  }
+
   if (!security_answer) {
-    return res.status(400).json({ message: "Enter a valid answer" });
+    return res.status(400).json({ message: "Enter a valid security_answer" });
   }
 
   if (!phone || !validator.isMobilePhone(phone)) {
@@ -98,9 +102,6 @@ router.post("/register", async (req, res) => {
     const pass_hash = await hashString(password);
     const securityAns_hash = await hashString(security_answer);
 
-    const refreshToken = generateRefreshToken(username);
-    const accessToken = generateAccessToken(username);
-
     const userData = await pool.query(
       `INSERT INTO users(
       username,
@@ -114,7 +115,7 @@ router.post("/register", async (req, res) => {
       occupation,
       city,
       state,
-      verified_email
+      email_verified
       ) VALUES ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning user_id`,
       [
         username,
@@ -132,11 +133,14 @@ router.post("/register", async (req, res) => {
       ]
     );
 
-    const userID = userData.rows[0].userid;
+    const user_id = userData.rows[0].user_id;
+
+    const refreshToken = generateRefreshToken(user_id);
+    const accessToken = generateAccessToken(user_id);
 
     await pool.query(
       "INSERT INTO refresh_token(user_id, token) values ($1, $2)",
-      [userID, refreshToken]
+      [user_id, refreshToken]
     );
     return res.status(200).json({
       message: "user account created successfully",
@@ -202,6 +206,18 @@ router.post("/login", async (req, res) => {
     return res
       .status(200)
       .json({ message: "Login successful", token: accessToken });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/securityQuestions", async (req, res) => {
+  try {
+    const securityQuestions = await pool.query(
+      "SELECT question from security_questions"
+    );
+    return res.status(200).json(securityQuestions.rows.map((q) => q.question));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });

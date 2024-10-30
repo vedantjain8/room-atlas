@@ -33,7 +33,7 @@ exports.up = (pgm) => {
       notNull: true,
       default: "/assets/profile/default_user_profile.png",
     },
-    create_at: {
+    created_at: {
       type: "TIMESTAMP",
       notNull: true,
       default: pgm.func("current_timestamp"),
@@ -49,7 +49,7 @@ exports.up = (pgm) => {
     occupation: { type: "VARCHAR(255)", notNull: true },
     city: { type: "VARCHAR(255)", notNull: true },
     state: { type: "VARCHAR(255)", notNull: true },
-    verified_email: { type: "BOOLEAN", notNull: true, default: false },
+    email_verified: { type: "BOOLEAN", notNull: true, default: false },
   });
 
   pgm.createTable("preference_user_link", {
@@ -67,7 +67,7 @@ exports.up = (pgm) => {
   pgm.createTable("refresh_token", {
     user_id: { type: "INT", notNull: true, references: "users" },
     token: { type: "TEXT", notNull: true },
-    create_at: {
+    created_at: {
       type: "TIMESTAMP",
       notNull: true,
       default: pgm.func("current_timestamp"),
@@ -244,141 +244,126 @@ exports.up = (pgm) => {
   ('Sports Complex');
 
   INSERT INTO users (
-    username,
-    email,
-    pass_hash,
-    question,
-    answer_hash,
-    phone,
-    user_role,
-    gender,
-    occupation,
-    city,
-    state,
-    verified_email,
-    dob
+      username,
+      email,
+      pass_hash,
+      question,
+      answer_hash,
+      phone,
+      user_role,
+      gender,
+      occupation,
+      city,
+      state,
+      email_verified,
+      dob
   )
   VALUES (
-    'bosshu',
-    'this@gmail.com',
-    'thisisverystrongpassword',
-    9,
-    'blue',
-    909090909,
-    'user',
-    'M',
-    'Student',
-    'Surat',
-    'Gujarat',
-    true,
-    '2002/02/02'
+      'bosshu',
+      'this@gmail.com',
+      '$2b$10$KiX.QKmhNYy4dqI63C8equyKV5D8DUZsfK6bvrFyJZ1It6RLdaJJW',
+      9,
+      '$2b$10$jHy14Y/Q2eWwU5j3YnCcpufIU1p6wfNqIMh3Dyvqo1tctAPV8.7oq',
+      '909090909',
+      'user',
+      'M',
+      'student',
+      'surat',
+      'gujarat',
+      true,
+      '2002-02-02'
   );
-
-  INSERT INTO listing (listing_title, listing_desc, images, uploaded_by, is_available, location, city, state)
-  VALUES
-  ('Cozy Apartment', 'A cozy 2-bedroom apartment with a great city view.', '["image1.jpg", "image2.jpg"]', 1, true, 'Downtown', 'New York', 'NY'),
-  ('Spacious Villa', 'Luxurious villa with a private pool and garden.', '["image1.jpg", "image2.jpg"]', 1, true, 'Palm Beach', 'Miami', 'FL'),
-  ('Modern Studio', 'A modern studio apartment perfect for young professionals.', '["image1.jpg", "image2.jpg"]', 1, true, 'Midtown', 'Los Angeles', 'CA'),
-  ('Beachside Cottage', 'Charming beachside cottage, steps from the ocean.', '["image1.jpg", "image2.jpg"]', 1, true, 'Oceanfront', 'San Diego', 'CA'),
-  ('Suburban House', '4-bedroom house in a peaceful suburban neighborhood.', '["image1.jpg", "image2.jpg"]', 1, true, 'Greenwood', 'Seattle', 'WA');
 
   INSERT INTO listing (listing_title, listing_desc, images, uploaded_by, is_available, rented_on, location, city, state)
   VALUES
+  ('Cozy Apartment', 'A cozy 2-bedroom apartment with a great city view.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Downtown', 'New York', 'NY'),
+  ('Spacious Villa', 'Luxurious villa with a private pool and garden.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Palm Beach', 'Miami', 'FL'),
+  ('Modern Studio', 'A modern studio apartment perfect for young professionals.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Midtown', 'Los Angeles', 'CA'),
+  ('Beachside Cottage', 'Charming beachside cottage, steps from the ocean.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Oceanfront', 'San Diego', 'CA'),
+  ('Suburban House', '4-bedroom house in a peaceful suburban neighborhood.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Greenwood', 'Seattle', 'WA'),
   ('Urban Condo', 'Modern condo in the heart of the city.', '["image1.jpg", "image2.jpg"]', 1, false, '2024-09-01 10:30:00', 'Central Park', 'Chicago', 'IL'),
-  ('Mountain Cabin', 'Cabin with stunning mountain views and hiking trails.', '["image1.jpg", "image2.jpg"]', 1, false, '2024-08-15 14:00:00', 'Pine Hills', 'Denver', 'CO');
+  ('Mountain Cabin', 'Cabin with stunning mountain views and hiking trails.', '["image1.jpg", "image2.jpg"]', 1, false, '2024-08-15 14:00:00', 'Pine Hills', 'Denver', 'CO'),
+  ('Stylish Apartment', 'A stylish apartment in the city center.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'City Center', 'New York', 'NY'),
+  ('Luxury Villa', 'A luxurious villa with stunning views.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Uptown', 'Los Angeles', 'CA'),
+  ('Modern Condo', 'A modern condo with all amenities.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Downtown', 'Miami', 'FL'),
+  ('Charming Studio', 'A charming studio apartment.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Soho', 'New York', 'NY'),
+  ('Beach House', 'A cozy beach house just steps from the ocean.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Ocean Drive', 'Miami', 'FL'),
+  ('Suburban Home', 'A family-friendly home in the suburbs.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Greenwood', 'Seattle', 'WA'),
+  ('Penthouse Suite', 'Luxurious penthouse with panoramic views.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Beverly Hills', 'Los Angeles', 'CA'),
+  ('Cozy Cottage', 'A charming cottage in the woods.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Mountain View', 'Denver', 'CO'),
+  ('Urban Loft', 'An urban loft with an industrial vibe.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Central Park', 'Chicago', 'IL'),
+  ('Riverside Bungalow', 'A beautiful bungalow by the river.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Riverside', 'Austin', 'TX'),
+  ('Country Farmhouse', 'A rustic farmhouse in the countryside.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Farmington', 'Nashville', 'TN'),
+  ('Downtown Studio', 'A small studio in the heart of downtown.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Downtown', 'San Francisco', 'CA'),
+  ('Loft Apartment', 'Spacious loft apartment with modern design.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'District 9', 'Miami', 'FL'),
+  ('Historic Mansion', 'A beautifully restored historic mansion.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Historic District', 'New Orleans', 'LA'),
+  ('Garden Apartment', 'An apartment with a lovely garden.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Green Valley', 'Phoenix', 'AZ'),
+  ('Skylight Apartment', 'An apartment with skylights and natural light.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Highland Park', 'Dallas', 'TX'),
+  ('Contemporary House', 'A contemporary house with unique design.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'North Shore', 'Chicago', 'IL'),
+  ('Artisan Loft', 'A creative loft space for artists.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Arts District', 'Los Angeles', 'CA'),
+  ('Luxury Condo', 'Luxury condo with modern amenities.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Sunny Isles', 'Miami', 'FL'),
+  ('Seaside Villa', 'A beautiful villa by the sea.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'Oceanfront', 'Santa Monica', 'CA'),
+  ('Furnished Apartment', 'A fully furnished apartment ready to move in.', '["image1.jpg", "image2.jpg"]', 1, true, NULL, 'West End', 'Austin', 'TX');
+
 
   INSERT INTO listing_metadata (listing_id, listing_type, prefered_tenants, is_available, bedrooms, bathrooms, rent, deposit, furnishing, floor, total_floors, areasqft)
   VALUES 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Cozy Apartment'), 1, 1, true, 2, 1, 2500.00, 5000.00, 2, 4, 10, 1200.00);
-
-  INSERT INTO listing_metadata (listing_id, listing_type, prefered_tenants, is_available, bedrooms, bathrooms, rent, deposit, furnishing, floor, total_floors, areasqft)
-  VALUES 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Spacious Villa'), 2, 3, true, 4, 3, 5000.00, 10000.00, 3, 1, 2, 3500.00);
-
-  INSERT INTO listing_metadata (listing_id, listing_type, prefered_tenants, is_available, bedrooms, bathrooms, rent, deposit, furnishing, floor, total_floors, areasqft)
-  VALUES 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Modern Studio'), 1, 2, true, 1, 1, 1800.00, 3000.00, 1, 10, 20, 600.00);
-
-  INSERT INTO listing_metadata (listing_id, listing_type, prefered_tenants, is_available, bedrooms, bathrooms, rent, deposit, furnishing, floor, total_floors, areasqft)
-  VALUES 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Beachside Cottage'), 2, 3, true, 3, 2, 3500.00, 7000.00, 2, 1, 1, 1800.00);
-
-  INSERT INTO listing_metadata (listing_id, listing_type, prefered_tenants, is_available, bedrooms, bathrooms, rent, deposit, furnishing, floor, total_floors, areasqft)
-  VALUES 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Suburban House'), 3, 4, true, 4, 3, 4000.00, 8000.00, 2, 2, 2, 2500.00);
-
-  INSERT INTO listing_metadata (listing_id, listing_type, prefered_tenants, is_available, bedrooms, bathrooms, rent, deposit, furnishing, floor, total_floors, areasqft)
-  VALUES 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Urban Condo'), 1, 2, false, 2, 2, 2800.00, 6000.00, 3, 6, 10, 1500.00);
-
-  INSERT INTO listing_metadata (listing_id, listing_type, prefered_tenants, is_available, bedrooms, bathrooms, rent, deposit, furnishing, floor, total_floors, areasqft)
-  VALUES 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Mountain Cabin'), 2, 3, false, 3, 2, 3200.00, 6500.00, 2, 1, 1, 2200.00);
-    
-
-
-
-  -- Cozy Apartment (has amenities like Parking, Lift, 24x7 Security, Power Backup, Water Supply)
-  INSERT INTO listing_amenities (listing_id, amenity_id)
-  VALUES
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Cozy Apartment'), 3),  -- Parking
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Cozy Apartment'), 4),  -- Lift
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Cozy Apartment'), 5),  -- 24x7 Security
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Cozy Apartment'), 6),  -- Power Backup
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Cozy Apartment'), 13); -- Water Supply
-
-  -- Spacious Villa (has amenities like Pool, Garden, Club House, CCTV Surveillance, Fire Safety)
-  INSERT INTO listing_amenities (listing_id, amenity_id)
-  VALUES
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Spacious Villa'), 1),  -- Pool
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Spacious Villa'), 10), -- Garden
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Spacious Villa'), 11), -- Club House
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Spacious Villa'), 8),  -- CCTV Surveillance
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Spacious Villa'), 12); -- Fire Safety
-
-  -- Modern Studio (has amenities like Wi-Fi, Lift, Gym, Intercom Facility, Power Backup)
-  INSERT INTO listing_amenities (listing_id, amenity_id)
-  VALUES
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Modern Studio'), 7),  -- Wi-Fi
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Modern Studio'), 4),  -- Lift
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Modern Studio'), 2),  -- Gym
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Modern Studio'), 14), -- Intercom Facility
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Modern Studio'), 6);  -- Power Backup
-
-  -- Beachside Cottage (has amenities like Garden, CCTV Surveillance, Water Supply, Fire Safety)
-  INSERT INTO listing_amenities (listing_id, amenity_id)
-  VALUES
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Beachside Cottage'), 10), -- Garden
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Beachside Cottage'), 8),  -- CCTV Surveillance
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Beachside Cottage'), 13), -- Water Supply
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Beachside Cottage'), 12); 
-
-  -- Suburban House (has amenities like Parking, Children Play Area, Garden, Water Supply, Fire Safety)
-  INSERT INTO listing_amenities (listing_id, amenity_id)
-  VALUES
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Suburban House'), 3),  
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Suburban House'), 9),  
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Suburban House'), 10), 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Suburban House'), 13), 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Suburban House'), 12); 
-
-  -- Urban Condo (already rented, has amenities like Gym, Pool, Wi-Fi, Lift, CCTV Surveillance)
-  INSERT INTO listing_amenities (listing_id, amenity_id)
-  VALUES
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Urban Condo'), 2),  
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Urban Condo'), 1),  
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Urban Condo'), 7),  
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Urban Condo'), 4),  
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Urban Condo'), 8);  
+  (1, 1, 1, true, 2, 1, 2500.00, 5000.00, 2, 4, 10, 1200.00),
+  (2, 2, 3, true, 4, 3, 5000.00, 10000.00, 3, 1, 2, 3500.00),
+  (3, 1, 2, true, 1, 1, 1800.00, 3000.00, 1, 10, 20, 600.00),
+  (4, 2, 3, true, 3, 2, 3500.00, 7000.00, 2, 1, 1, 1800.00),
+  (5, 3, 4, true, 4, 3, 4000.00, 8000.00, 2, 2, 2, 2500.00),
+  (6, 1, 2, false, 2, 2, 2800.00, 6000.00, 3, 6, 10, 1500.00),
+  (7, 2, 3, false, 3, 2, 3200.00, 6500.00, 2, 1, 1, 2200.00),
+  (8, 1, 2, true, 2, 1, 2500.00, 500.00, 1, 2, 5, 850.00),
+  (9, 1, 2, true, 4, 3, 5000.00, 1000.00, 1, 1, 2, 2000.00),
+  (10, 1, 2, true, 2, 2, 3000.00, 600.00, 1, 5, 5, 1200.00),
+  (11, 1, 1, true, 1, 1, 1800.00, 300.00, 1, 3, 3, 600.00),
+  (12, 1, 1, true, 3, 2, 3200.00, 700.00, 1, 2, 4, 1500.00),
+  (13, 1, 3, true, 3, 2, 4500.00, 800.00, 2, 2, 4, 1800.00),
+  (14, 1, 1, true, 1, 1, 2200.00, 400.00, 1, 1, 3, 500.00),
+  (15, 1, 2, true, 3, 2, 2900.00, 600.00, 2, 4, 4, 1300.00),
+  (16, 1, 2, true, 2, 1, 2500.00, 500.00, 1, 1, 3, 900.00),
+  (17, 1, 3, true, 4, 3, 6000.00, 1200.00, 1, 1, 1, 2200.00),
+  (18, 1, 2, true, 1, 1, 2000.00, 350.00, 1, 1, 2, 550.00),
+  (19, 1, 1, true, 1, 1, 1200.00, 200.00, 1, 2, 2, 400.00),
+  (20, 1, 2, true, 2, 1, 2500.00, 500.00, 1, 3, 5, 1000.00),
+  (21, 1, 1, true, 1, 1, 1600.00, 300.00, 1, 1, 3, 650.00),
+  (22, 1, 2, true, 3, 2, 3500.00, 700.00, 2, 2, 4, 1400.00),
+  (23, 1, 3, true, 4, 3, 5500.00, 1100.00, 1, 2, 3, 2100.00),
+  (24, 1, 1, true, 2, 1, 2300.00, 450.00, 1, 2, 2, 800.00),
+  (25, 1, 1, true, 3, 2, 3000.00, 600.00, 1, 1, 4, 1200.00),
+  (26, 1, 2, true, 2, 1, 2700.00, 500.00, 1, 1, 5, 900.00);
 
 
   INSERT INTO listing_amenities (listing_id, amenity_id)
   VALUES
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Mountain Cabin'), 15), 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Mountain Cabin'), 10), 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Mountain Cabin'), 13), 
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Mountain Cabin'), 6),  
-  ((SELECT listing_id FROM listing WHERE listing_title = 'Mountain Cabin'), 12); 
+  (1, 3), (1, 4), (1, 5), (1, 6), (1, 13),
+  (2, 1), (2, 10), (2, 11), (2, 8), (2, 12),
+  (3, 7), (3, 4), (3, 2), (3, 14), (3, 6),
+  (4, 10), (4, 8), (4, 13), (4, 12),
+  (5, 3), (5, 9), (5, 10), (5, 13), (5, 12),
+  (6, 2), (6, 1), (6, 7), (6, 4), (6, 8),
+  (7, 15), (7, 10), (7, 13), (7, 6), (7, 12),
+  (8, 1), (8, 2), (8, 3),
+  (9, 1), (9, 4),
+  (10, 2), (10, 3), (10, 5),
+  (11, 1), (11, 3),
+  (12, 2), (12, 4), (12, 6),
+  (13, 1), (13, 5),
+  (14, 1),
+  (15, 2), (15, 3),
+  (16, 1), (16, 4),
+  (17, 2), (17, 6),
+  (18, 1),
+  (19, 3),
+  (20, 2),
+  (21, 1),
+  (22, 4),
+  (23, 1), (23, 2),
+  (24, 1),
+  (25, 3),
+  (26, 1), (26, 2);
 
 
   `);

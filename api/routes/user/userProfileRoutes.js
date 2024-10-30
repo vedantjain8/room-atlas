@@ -3,6 +3,7 @@ const redisClient = require("../../config/dbredis");
 const pool = require("../../config/db");
 const { authenticateToken } = require("../../middleware/jwtMiddleware");
 const settings = require("../../config/settings");
+const getUserData = require("../../functions/user");
 
 const router = express.Router();
 
@@ -14,91 +15,118 @@ router.get("/profile/:username", authenticateToken, async function (req, res) {
   }
 
   try {
-    const userProfileCache = await redisClient.hGet(username, "profile");
-
-    if (userProfileCache) {
-      return res.status(200).json({ message: JSON.parse(userProfileCache) });
+    let user_id = await redisClient.hGet(`userLookup`, username);
+    if (user_id) {
+      const userProfileCache = await getUserData(user_id);
+      return res.status(200).json({ message: userProfileCache });
     }
 
-    const profileResult = await pool.query(
-      `SELECT 
-        u.username,
-        u.avatar,
-        u.bio,
-        u.city,
-        u.state,
-        STRING_AGG(p.preference, ', ') AS preferences
-      FROM 
-          users u
-      LEFT JOIN 
-          preference_user_link pul
-          ON u.user_id = pul.user_id
-      LEFT JOIN 
-          preferences p
-          ON p.preference_id = pul.preference_id
-      WHERE 
-          u.username = $1
-      GROUP BY 
-          u.username, u.avatar, u.bio, u.city, u.state
-    `,
+    const userResult = await pool.query(
+      `select user_id from users where username = $1`,
       [username]
     );
-
-    if (profileResult.rows.length === 0) {
+    if (userResult.rows.length === 0)
       return res.status(404).json({ message: "Profile not found" });
-    }
 
-    const profile = profileResult.rows[0];
+    user_id = userResult.rows[0].user_id;
+    const userProfile = await getUserData(user_id);
+    await redisClient.hSet(`userLookup`, username, user_id);
+    await redisClient.expire(`userLookup`, settings.server.defaultCacheTimeout);
 
-    await redisClient.hSet(username, "profile", JSON.stringify(profile));
-    await redisClient.expire(username, 3600);
-
-    res.status(200).json({ message: profile });
+    return res.status(200).json({ message: userProfile });
   } catch (error) {
     console.error("Error fetching profile:", error);
     return res.status(500).json({ message: "Server error" });
   }
 });
 
-router.get("/profile/:username/listing", authenticateToken, async function (req, res) {
-  const offset = parseInt(req.query.offset) || 0;
-  const username = req.params.username;
+router.get(
+  "/profile/:username/listing",
+  authenticateToken,
+  async function (req, res) {
+    try {
+      const offset = parseInt(req.query.offset) || 0;
+      const username = req.params.username;
 
-  if (!username) {
-    return res
-      .status(400)
-      .json({ message: "Username query parameter is required" });
-  }
+      if (!username) {
+        return res
+          .status(400)
+          .json({ message: "Username query parameter is required" });
+      }
 
-  try {
-    // TODO: fix the query
-    const result = await pool.query(
-      `SELECT 
-        listing_id, 
-        listing_title, 
-        listing_desc, 
-        images, 
-        uploaded_by, 
-        uploaded_on, 
-        location, 
-        listing.city, 
-        listing.state 
-      FROM 
-        listing 
-      LEFT JOIN users 
-        on listing.uploaded_by = users.user_id
-      WHERE users.username = $1 
-      LIMIT ${settings.database.limit} 
-      OFFSET $2`,
-      [username, offset]
-    );
-    return res.status(200).json({
-      message: result.rows,
-    });
-  } catch (error) {
-    console.error("Error fetching listings:", error);
-    return res.status(500).json({ message: "Server error" });
+      let user_id =
+        (await redisClient.hGet(`userLookup`, username)) ??
+        pool.query("select user_id from users where username = $1", [username])
+          .rows[0].user_id;
+
+      if (!user_id)
+        return res.status(404).json({ message: "Profile not found" });
+
+      const result = await pool.query(
+        `
+        SELECT 
+          listing.listing_id,
+          listing.listing_title,
+          listing.listing_desc,
+          listing.images,
+          listing.uploaded_by,
+          listing.is_available,
+          listing.rented_on,
+          listing.location,
+          listing.city,
+          listing.state,
+          lm.listing_type,
+          lm.prefered_tenants,
+          lm.is_available,
+          lm.bedrooms,
+          lm.bathrooms,
+          lm.rent,
+          lm.deposit,
+          lm.furnishing,
+          lm.floor,
+          lm.total_floors,
+          lm.areasqft,
+          ARRAY_AGG(a.amenity_name) AS amenities
+        FROM
+          listing
+        JOIN 
+          listing_metadata lm
+        ON 
+          listing.listing_id = lm.listing_id
+        LEFT JOIN 
+          listing_amenities la
+        ON 
+          listing.listing_id = la.listing_id
+        LEFT JOIN
+          amenities a
+        ON
+          la.amenity_id = a.amenity_id 
+        WHERE 
+          listing.uploaded_by = $1
+        GROUP BY 
+            listing.listing_id,
+            lm.listing_type,
+            lm.prefered_tenants,
+            lm.is_available,
+            lm.bedrooms,
+            lm.bathrooms,
+            lm.rent,
+            lm.deposit,
+            lm.furnishing,
+            lm.floor,
+            lm.total_floors,
+            lm.areasqft
+        LIMIT ${settings.database.limit} offset $2`,
+        [user_id, offset]
+      );
+      return res.status(200).json({
+        message: result.rows,
+      });
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+      return res.status(500).json({ message: "Server error" });
+    }
   }
-});
+);
 
 module.exports = router;
