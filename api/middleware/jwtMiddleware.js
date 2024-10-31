@@ -3,9 +3,13 @@ const { privkey } = require("../config/key");
 
 function authenticateToken(req, res, next) {
   // used as a middleware
-  const token = req.headers["authorization"];
+  let token = req.headers["authorization"] || req.headers["Authorization"];
 
   if (token == null) return res.sendStatus(401);
+
+  if (token.startsWith("Bearer ")) {
+    token = token.slice(7, token.length);
+  }
 
   jwt.verify(token, privkey, (err, user) => {
     if (err) {

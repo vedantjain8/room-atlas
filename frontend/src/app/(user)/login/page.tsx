@@ -1,8 +1,12 @@
+// login/page.tsx
 "use client";
+
 import { useState } from "react";
 import Cookies from "js-cookie";
+import { useAuth } from "@/app/contexts/AuthContext"; // Import the AuthContext
 
 export default function LoginForm() {
+  const { login } = useAuth(); // Use the login function from AuthContext
   const [formData, setFormData] = useState({
     loginIdentifier: "",
     identifier: "",
@@ -34,33 +38,36 @@ export default function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${process.env.HOSTNAME}/user/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/user/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
       const data = await response.json();
-      console.log(data);
+
       if (response.status === 200) {
-        // Set cookies
-        Cookies.set("token", data.token, { expires: 3 }); // Expires in 3 days
+        // Set cookies and login using AuthContext
+        Cookies.set("token", data.token, { expires: 3 }); // Set token to expire in 3 days
+        login(data.token, data.user); // Store token and user in context
         alert("Login successful");
-        window.location.href = "/";
-        // Redirect or perform other actions
       } else {
-        alert("Login failed");
+        alert(data.message || "Login failed");
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("An error occurred");
+      alert("An error occurred during login");
     }
   };
 
   return (
     <>
-      <div className=" mt-24 max-w-md mx-auto p-6 border rounded-lg shadow-lg">
+      <div className="mt-24 max-w-md mx-auto p-6 border rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

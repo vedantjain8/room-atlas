@@ -64,7 +64,7 @@ const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({
 
   const handleSubmit = async () => {
     const otpCheckResponse = await fetch(
-      `${process.env.HOSTNAME}/verify/email/check`,
+      `${process.env.NEXT_PUBLIC_HOSTNAME}/verify/email/check`,
       {
         method: "POST",
         headers: {

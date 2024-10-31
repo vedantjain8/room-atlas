@@ -2,6 +2,8 @@ const express = require("express");
 const validator = require("validator");
 const redisClient = require("../../config/dbredis");
 const pool = require("../../config/db");
+const getUserData = require("../../functions/user");
+const settings = require("../../config/settings");
 const { hashString, checkString } = require("../../functions/hashPassword");
 const {
   generateRefreshToken,
@@ -154,6 +156,9 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   let { loginIdentifier, identifier, password } = req.body;
+  // loginIdentifier can be either "username" or "email"
+  // identifier is the username or email
+
   let query;
 
   if (!identifier) {
@@ -180,14 +185,14 @@ router.post("/login", async (req, res) => {
 
   query = `SELECT user_id, pass_hash from users where ${loginIdentifier}='${identifier}'`;
   try {
-    const pass_hash_result = await pool.query(query);
+    const query_result = await pool.query(query);
 
-    if (pass_hash_result.rows.length === 0) {
+    if (query_result.rows.length === 0) {
       return res.status(400).json({ message: "Invalid username" });
     }
 
-    const pass_hash = pass_hash_result.rows[0].pass_hash;
-    const user_id = pass_hash_result.rows[0].user_id;
+    const pass_hash = query_result.rows[0].pass_hash;
+    const user_id = query_result.rows[0].user_id;
 
     const passwordCorrect = await checkString(password, pass_hash);
 
@@ -195,17 +200,29 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const refreshToken = generateRefreshToken(user_id);
+    // const refreshToken = generateRefreshToken(user_id);
     const accessToken = generateAccessToken(user_id);
 
-    await pool.query(
-      "INSERT INTO refresh_token(user_id, token) values ($1, $2)",
-      [user_id, refreshToken]
-    );
+    const userProfile = await getUserData(user_id);
+    if (loginIdentifier === "username") {
+      await redisClient.hSet(`userLookup`, identifier, user_id);
+      await redisClient.expire(
+        `userLookup`,
+        settings.server.defaultCacheTimeout
+      );
+    }
 
-    return res
-      .status(200)
-      .json({ message: "Login successful", token: accessToken });
+    // TODO: update the query
+    // await pool.query(
+    //   "INSERT INTO refresh_token(user_id, token) values ($1, $2)",
+    //   [user_id, refreshToken]
+    // );
+
+    return res.status(200).json({
+      message: "Login successful",
+      token: accessToken,
+      user: userProfile,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });

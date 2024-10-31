@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { NextUIProvider } from "@nextui-org/react";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,9 +31,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <NextUIProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <AuthProvider>
+            <Navbar />
+            {children}
+            <Footer />
+          </AuthProvider>
         </NextUIProvider>
       </body>
     </html>
