@@ -13,6 +13,7 @@ const chattingRoutes = require("./routes/chat/chattingRoutes");
 const verificationRoutes = require("./routes/user/verificationRoutes");
 const userProfileRoutes = require("./routes/user/userProfileRoutes");
 const feedbackRoutes = require("./routes/pages/feedbackRoutes");
+const calendarRoutes = require("./routes/user/calendarRoutes");
 const jwtRoutes = require("./routes/jwtRoutes");
 
 const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
@@ -53,6 +54,7 @@ app.use("/chat", chattingRoutes);
 app.use("/verify", verificationRoutes);
 app.use("/user", userProfileRoutes);
 app.use("/feedback", feedbackRoutes);
+app.use("/calendar", calendarRoutes);
 app.use(jwtRoutes);
 
 // app.use(jwtRoutes);
@@ -62,7 +64,12 @@ app.get("/ping", (req, res) => {
   return res.status(200).json({ message: `Pong` });
 });
 
-const io = socketio(server);
+const io = socketio(server, {
+  cors: {
+    origin: "http://localhost:3000", // Make sure this is the origin of your frontend
+    methods: ["GET", "POST"],
+  },
+});
 initSocket(io, pool);
 
 process.on("SIGINT", async () => {

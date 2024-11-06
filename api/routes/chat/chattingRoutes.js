@@ -6,17 +6,26 @@ const router = express.Router();
 
 router.get("/chat-history/:sender/:receiver", async (req, res) => {
   const { sender, receiver } = req.params;
-  const offset = req.query.offset || 0;
-  const query = `
+
+  try {
+    if (!sender || !receiver || sender == undefined || receiver == undefined) {
+      return res.status(400);
+    }
+    const offset = req.query.offset || 0;
+    const query = `
     SELECT * FROM messages
-    WHERE (sender_id = $1 AND receiver_id = $2)
-    OR (sender_id = $2 AND receiver_id = $1)
+    WHERE (sender_id = ${sender} AND receiver_id = ${receiver})
+    OR (sender_id = ${receiver} AND receiver_id = ${sender})
     ORDER BY created_at ASC 
     LIMIT ${settings.database.limit}
-    OFFSET $3
+    OFFSET ${offset}
     `;
-  const result = await pool.query(query, [sender, receiver, offset]);
-  res.json(result.rows);
+    const result = await pool.query(query);
+    return res.status(200).json({ message: result.rows });
+  } catch (err) {
+    console.error("error at chat-history", err);
+    return res.status(500).json({ message: [] });
+  }
 });
 
 module.exports = router;

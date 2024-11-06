@@ -390,7 +390,6 @@ export default function RegisterForm() {
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 "
             >
-              {/* TODO: add the default options available in the db */}
               <option value="" disabled className="opacity-55">
                 Select a security question
               </option>
