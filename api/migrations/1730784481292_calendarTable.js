@@ -11,7 +11,6 @@ exports.shorthands = undefined;
 exports.up = (pgm) => {
   pgm.createTable("calendar", {
     event_id: { type: "SERIAL", primaryKey: true },
-    listing_id: { type: "integer", notNull: true, references: "listing" },
     user1_id: { type: "integer", notNull: true, references: "users" },
     user2_id: { type: "integer", notNull: true, references: "users" },
     event_start_date: { type: "timestamp", notNull: true },
@@ -20,7 +19,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "calendar",
     "unique_event_user_pair",
-    "UNIQUE(listing_id, user1_id, user2_id, event_start_date)"
+    "UNIQUE(user1_id, user2_id, event_start_date)"
   );
 
   pgm.renameColumn("listing", "location", "area");

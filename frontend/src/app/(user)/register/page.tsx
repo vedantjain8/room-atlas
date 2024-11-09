@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { State, City, IState } from "country-state-city";
 import ExpandableOTPInput from "@/components/otpModal";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import {
   DatePicker,
   DateValue,
@@ -13,11 +13,8 @@ import {
   Radio,
   Spinner,
 } from "@nextui-org/react";
-import {
-  faPaperPlane,
-  faArrowRight,
-  faExclamationCircle,
-} from "@fortawesome/free-solid-svg-icons";
+
+import { ArrowRight, CircleAlert, Send } from "lucide-react";
 
 export default function RegisterForm() {
   const [page, setPage] = useState(1); // set this to 2 to see page 2
@@ -87,7 +84,7 @@ export default function RegisterForm() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
-      }
+      } 
       const data = await response.json();
       console.log(data);
       // TODO: add validation for the data received
@@ -237,7 +234,7 @@ export default function RegisterForm() {
     <div className="max-w-md w-full mt-24 mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white">
       {page === 1 ? (
         <form name="PageOneForm" className="my-8" onSubmit={handleNext}>
-          <h1 className="flex justify-center items-center text-xl font-medium">
+          <h1 className="flex justify-center items-center text-2xl font-medium mb-4">
             Register
           </h1>
           <LabelInputContainer className="mb-4">
@@ -251,10 +248,7 @@ export default function RegisterForm() {
             />
             {errors.username && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">{errors.username}</p>
               </div>
             )}
@@ -273,20 +267,14 @@ export default function RegisterForm() {
               />
               {errors.email && (
                 <div className="flex items-center mt-1 ml-1">
-                  <FontAwesomeIcon
-                    icon={faExclamationCircle}
-                    className="text-red-500 mr-1"
-                  />
+                  <CircleAlert/>
                   <p className="text-red-500 text-sm">{errors.email}</p>
                 </div>
               )}
 
               {errors.emailVerified && (
                 <div className="flex items-center mt-1 ml-1">
-                  <FontAwesomeIcon
-                    icon={faExclamationCircle}
-                    className="text-red-500 mr-1"
-                  />
+                  <CircleAlert/>
                   <p className="text-red-500 text-sm">{errors.emailVerified}</p>
                 </div>
               )}
@@ -335,10 +323,7 @@ export default function RegisterForm() {
             />
             {errors.password && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">{errors.password}</p>
               </div>
             )}
@@ -354,34 +339,32 @@ export default function RegisterForm() {
             />
             {errors.confirmPassword && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
               </div>
             )}
           </LabelInputContainer>
-
-          <LabelInputContainer className="mb-4">
+          <div className="flex items-center justify-between mb-4">
+          <LabelInputContainer className="w-2/12">
+          <p>+91</p>
+          </LabelInputContainer>
+          <LabelInputContainer className="w-11/12">
+            
             <Input
               id="phone"
               placeholder="Phone Number"
-              type="number"
+              type="tel"
               name="phone"
               onChange={handleChange}
             />
             {errors.phone && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">{errors.phone}</p>
               </div>
             )}
           </LabelInputContainer>
-
+          </div>
           <LabelInputContainer className="mb-4">
             <select
               id="security_question"
@@ -402,10 +385,7 @@ export default function RegisterForm() {
 
             {errors.security_question && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">
                   {errors.security_question}
                 </p>
@@ -422,10 +402,7 @@ export default function RegisterForm() {
             />
             {errors.security_answer && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">{errors.security_answer}</p>
               </div>
             )}
@@ -437,7 +414,7 @@ export default function RegisterForm() {
             // onClick={handleNext}
           >
             Next
-            <FontAwesomeIcon icon={faArrowRight} />
+            <ArrowRight />
             <BottomGradient />
           </button>
 
@@ -490,10 +467,7 @@ export default function RegisterForm() {
             </select>
             {errors.occupation && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">{errors.occupation}</p>
               </div>
             )}
@@ -518,10 +492,7 @@ export default function RegisterForm() {
             </select>
             {errors.state && (
               <div className="flex items-center mt-1 ml-1">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle}
-                  className="text-red-500 mr-1"
-                />
+                <CircleAlert />
                 <p className="text-red-500 text-sm">{errors.state}</p>
               </div>
             )}
@@ -549,7 +520,7 @@ export default function RegisterForm() {
             className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-black w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
             type="submit"
           >
-            Submit <FontAwesomeIcon icon={faPaperPlane} />
+            Submit <Send />
             <BottomGradient />
           </button>
 

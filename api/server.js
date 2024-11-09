@@ -9,6 +9,7 @@ const pool = require("./config/db");
 
 const userRoutes = require("./routes/user/userRoutes");
 const listingRoutes = require("./routes/listing/listingRoutes");
+const listingStaticRoutes = require("./routes/listing/listingStaticRoutes");
 const chattingRoutes = require("./routes/chat/chattingRoutes");
 const verificationRoutes = require("./routes/user/verificationRoutes");
 const userProfileRoutes = require("./routes/user/userProfileRoutes");
@@ -33,7 +34,7 @@ app.use(express.static("public"));
 app.set("trust proxy", true);
 app.use(
   cors({
-    origin: ["http://127.0.0.1:5500", "http://localhost:3000"],
+    origin: ["http://127.0.0.1:5500", "http://localhost:3000", "http://localhost:3100"],
   })
 );
 
@@ -55,6 +56,7 @@ app.use("/verify", verificationRoutes);
 app.use("/user", userProfileRoutes);
 app.use("/feedback", feedbackRoutes);
 app.use("/calendar", calendarRoutes);
+app.use("/const/listing", listingStaticRoutes);
 app.use(jwtRoutes);
 
 // app.use(jwtRoutes);

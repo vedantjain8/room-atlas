@@ -4,13 +4,7 @@ import { cn } from "@/lib/utils";
 import { Menu, MenuItem, HoveredLink, ProductItem } from "./ui/navbar-menu";
 import { useState } from "react";
 import Link from "next/link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faBell,
-  faCalendar,
-  faPaperPlane,
-  faThumbsUp,
-} from "@fortawesome/free-solid-svg-icons";
+import { Bell, Calendar, Send } from "lucide-react";
 
 function Navbar({ className }: { className?: string }) {
   const [active, setActive] = useState<string | null>(null);
@@ -29,16 +23,14 @@ function Navbar({ className }: { className?: string }) {
               Room Atlas
             </Link>
           </div>
-          <div className="flex justify-between w-4/12">
+          <div className="flex justify-between w-5/12">
             <MenuItem setActive={setActive} active={active} item="Home">
               <div className="flex flex-col space-y-4 text-sm">
                 <HoveredLink href="/">Hero Page</HoveredLink>
                 <HoveredLink href="/">Step by Step</HoveredLink>
               </div>
             </MenuItem>
-            <MenuItem setActive={setActive} active={active} item="Flats">
-              <Link href="/flats">Flats</Link>
-            </MenuItem>
+            <Link href="/flats">Flats</Link>
             <MenuItem
               setActive={setActive}
               active={active}
@@ -51,10 +43,12 @@ function Navbar({ className }: { className?: string }) {
             ></MenuItem>
           </div>
           <div className="flex justify-between items-center">
-            <div className="flex justify-between w-28 pl-2 pr-5 text-xl">
-              <FontAwesomeIcon icon={faCalendar} />
-              <FontAwesomeIcon icon={faPaperPlane} />
-              <FontAwesomeIcon icon={faBell} />
+            <div className="flex justify-between w-32 pl-2 pr-5 text-xl">
+              <Calendar strokeWidth={1.25} className="cursor-pointer" />
+              <Link href="/chat">
+              <Send strokeWidth={1.5} className="cursor-pointer" />
+              </Link>
+              <Bell strokeWidth={1.25} className="cursor-pointer"/>
             </div>
             <div className="flex items-center justify-between w-32">
               <Link href="/login" className="text-sky-700">

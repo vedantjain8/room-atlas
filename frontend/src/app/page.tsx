@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import React from "react";
 import { AuroraBackground } from "../components/ui/aurora-background";
 import { Timeline } from "@/components/ui/timeline";
+import search from "@/app/images/flats.png"
 import Image from "next/image";
 
 
@@ -13,20 +14,18 @@ export default function Home()  {
     content: (
       <div>
             <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-              I usually run out of copy, but when I see content this big, I try to
-              integrate lorem ipsum.
+              Search for your desired flats in a seemingly easy manner with near-perfect navigation and extremely accurate filters
             </p>
             <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-              Lorem ipsum is for people who are too lazy to write copy. But we are
-              not. Here are some more example of beautiful designs I built.
+              AI chatbot assisting you in every step of the way. Just ask!
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex justify-center">
             <Image
-              src="/Users/adityan/Documents/aceui/src/app/images/message_img.jpeg"
+              src={search}
               alt="startup template"
-              width={500}
+              width={900}
               height={500}
-              className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+              className="rounded-lg object-cover md:h-56 lg:h-72 w-9/12 shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
             />
             </div>
           </div>
@@ -37,15 +36,13 @@ export default function Home()  {
     content: (
       <div>
         <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-              I usually run out of copy, but when I see content this big, I try to
-              integrate lorem ipsum.
+              Message freely to solve queries and finalise the deal
             </p>
             <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-              Lorem ipsum is for people who are too lazy to write copy. But we are
-              not. Here are some more example of beautiful designs I built.
+              Messaging 
             </p>
             <Image
-              src="/Users/adityan/Documents/aceui/src/app/images/message_img.jpeg"
+              src="/room-atlas/frontend/src/app/images/message_img.jpeg"
               alt="startup template"
               width={500}
               height={500}
@@ -59,15 +56,13 @@ export default function Home()  {
     content: (
       <div>
         <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-              I usually run out of copy, but when I see content this big, I try to
-              integrate lorem ipsum.
+              Appoint dates for meeting and looking at the place
             </p>
             <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
-              Lorem ipsum is for people who are too lazy to write copy. But we are
-              not. Here are some more example of beautiful designs I built.
+              Advanced Calendar to add appointments directly linked to your Google Calendar
             </p>
             <Image
-              src="/Users/adityan/Documents/aceui/src/app/images/message_img.jpeg"
+              src="/room-atlas/frontend/src/app/images/message_img.jpeg"
               alt="startup template"
               width={500}
               height={500}
