@@ -72,7 +72,7 @@ router.get(
           listing.uploaded_by,
           listing.is_available,
           listing.rented_on,
-          listing.location,
+          listing.area,
           listing.city,
           listing.state,
           lm.listing_type,

@@ -7,7 +7,7 @@ import useSWRInfinite from "swr/infinite";
 interface ListingData {
   listing_id: number;
   listing_title: string;
-  location: string;
+  area: string;
   images: string[];
   rent: number;
   deposit: number;
@@ -50,7 +50,7 @@ const ListingsPage: React.FC = () => {
           <li className="py-2 text-gray-700">Price Range</li>
           <li className="py-2 text-gray-700">Bedrooms</li>
           <li className="py-2 text-gray-700">Furnishing</li>
-          <li className="py-2 text-gray-700">Location</li>
+          <li className="py-2 text-gray-700">Area</li>
         </ul>
       </aside>
 
@@ -82,7 +82,7 @@ const ListingsPage: React.FC = () => {
                 <ListingCard
                   key={listing.listing_id}
                   title={listing.listing_title}
-                  location={listing.location}
+                  area={listing.area}
                   image={listing.images || ["/path/to/default-image.png"]}
                   rent={listing.rent}
                   deposit={listing.deposit}

@@ -460,7 +460,7 @@ export default function RegisterForm() {
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="" disabled className="opacity-55">
-                I'm a
+                I&apos;m a
               </option>
               <option value="student">Student</option>
               <option value="working_professional">Working Professional</option>

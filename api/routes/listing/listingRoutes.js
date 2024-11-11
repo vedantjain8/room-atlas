@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
     listing.uploaded_by,
     listing.is_available,
     listing.rented_on,
-    listing.location,
+    listing.area,
     listing.city,
     listing.state,
     lm.listing_type,
@@ -84,7 +84,7 @@ router.post("/create", authenticateToken, async (req, res) => {
     listing_desc = null,
     image_json,
     uploaded_on,
-    location_pin,
+    area,
     city,
     state,
     preference_list = [],
@@ -109,8 +109,8 @@ router.post("/create", authenticateToken, async (req, res) => {
 
   if (!uploaded_on) uploaded_on = new Date();
 
-  if (!location_pin)
-    return res.status(400).json({ message: "Enter a valid location pin" });
+  if (!area)
+    return res.status(400).json({ message: "Enter a valid area" });
 
   if (!city) return res.status(400).json({ message: "Enter a valid city" });
 
@@ -158,7 +158,7 @@ router.post("/create", authenticateToken, async (req, res) => {
 
   try {
     const listing_result = await pool.query(
-      `INSERT INTO listing (listing_title, listing_desc, images, uploadedBy, uploadedOn, location, city, state) 
+      `INSERT INTO listing (listing_title, listing_desc, images, uploadedBy, uploadedOn, area, city, state) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning listing_id`,
       [
         listing_title,
@@ -166,7 +166,7 @@ router.post("/create", authenticateToken, async (req, res) => {
         image_json,
         req.user.user_id,
         uploaded_on,
-        location_pin,
+        area,
         city,
         state,
       ]
@@ -241,7 +241,7 @@ router.get("/:id", async (req, res) => {
           listing.uploaded_by,
           listing.is_available,
           listing.rented_on,
-          listing.location,
+          listing.area,
           listing.city,
           listing.state,
           lm.listing_type,
