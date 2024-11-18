@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { useAuth } from "@/app/contexts/AuthContext"; // Import the AuthContext
+import { Input } from "@nextui-org/react";
 
 export default function LoginForm() {
   const { login } = useAuth(); // Use the login function from AuthContext
@@ -55,7 +56,7 @@ export default function LoginForm() {
         // Set cookies and login using AuthContext
         Cookies.set("token", data.token, { expires: 3 }); // Set token to expire in 3 days
         login(data.token, data.user); // Store token and user in context
-        alert("Login successful");
+        alert("Login successful"); //TODO: Redirect to dashboard
       } else {
         alert(data.message || "Login failed");
       }
@@ -71,7 +72,16 @@ export default function LoginForm() {
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <input
+            <Input
+              type="text"
+              id="identifier"
+              name="identifier"
+              label="Username or Email"
+              value={formData.identifier}
+              onChange={handleChange}
+              required
+            />
+            {/* <input
               type="text"
               id="identifier"
               name="identifier"
@@ -80,10 +90,19 @@ export default function LoginForm() {
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            /> */}
           </div>
           <div className="mb-4">
-            <input
+            <Input
+              type="password"
+              id="password"
+              name="password"
+              label="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            {/* <input
               type="password"
               id="password"
               name="password"
@@ -92,14 +111,16 @@ export default function LoginForm() {
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            /> */}
           </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700"
-          >
-            Login
-          </button>
+          <div className="w-full flex justify-center">
+            <button
+              type="submit"
+              className="w-5/12 bg-gradient-to-br from-blue-600 to-sky-500 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-700"
+            >
+              Login
+            </button>
+          </div>
         </form>
       </div>
     </>

@@ -30,7 +30,7 @@ async function redisCheckUsername(username) {
     }
 
     const postgresResult = await pool.query(
-      "SELECT EXISTS (SELECT * FROM users WHERE username = $1)",
+      "SELECT EXISTS (SELECT * FROM users WHERE username = lower($1))",
       [username]
     );
     if (postgresResult.rows[0].exists) {

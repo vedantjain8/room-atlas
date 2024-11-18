@@ -11,46 +11,51 @@ const router = express.Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-const profile_folder = "../../public/assets/profile";
+const uploaded_image_folder = "public/assets/upload/images/";
 
 router.post(
-  "/upload/profile",
-  [authenticateToken, upload.single("uploaded_file")],
+  "/upload/image",
+  [authenticateToken, upload.array("uploaded_images")],
   async (req, res) => {
     try {
       const userid = req.user.userID;
       if (!userid) {
-        res.status(401).json({ response: "Unauthorized" });
+        return res.status(401).json({ response: "Unauthorized" });
       }
 
       // Create directories if they don't exist
-      fs.access(profile_folder, (error) => {
+      fs.access(uploaded_image_folder, (error) => {
         if (error) {
-          fs.mkdirSync(profile_folder);
+          fs.mkdirSync(uploaded_image_folder);
         }
       });
 
-      const { buffer, originalname } = req.file;
-      const ref = `${Date.now()}-${randomUUID}.webp`;
+      const imageLinks = [];
 
-      // Convert and save low-quality image
-      await sharp(buffer)
-        .webp({ quality: 20 })
-        .toFile(profile_folder + ref);
-      const link = `/assets/profile/${ref}`;
+      for (const file of req.files) {
+        const { buffer, originalname } = file;
+        if (!buffer) {
+          return res.status(400).json({ response: "No image uploaded" });
+        }
 
-      await redisClient.hSet(
-        "ImageUploadLog",
-        `${ref}`,
-        JSON.stringify({ userid, image_path: link, uploaded_on: new Date() })
-      );
+        const ref = `${Date.now()}-${randomUUID()}.webp`;
 
-      await pool.query(`UPDATE users SET avatar = $1 WHERE user_id = $2`, [
-        link,
-        userid,
-      ]);
+        // Convert and save low-quality image
+        await sharp(buffer)
+          .webp({ quality: 20 })
+          .toFile(`${uploaded_image_folder}${ref}`);
 
-      return res.json({ response: link });
+        const link = `/assets/upload/images/${ref}`;
+        imageLinks.push(link);
+
+        await redisClient.hSet(
+          "ImageUploadLog",
+          `${ref}`,
+          JSON.stringify({ userid, image_path: link, uploaded_on: new Date() })
+        );
+      }
+
+      return res.json({ response: imageLinks }); // Return an array of links
     } catch (error) {
       console.error(error);
       return res.status(500).json({ response: error });
@@ -59,12 +64,3 @@ router.post(
 );
 
 module.exports = router;
-{
-  /* <form action="http://localhost:3001/upload" enctype="multipart/form-data" method="post">
-    <div class="form-group">
-      <input type="file" class="form-control-file" name="uploaded_file">
-      <input type="text" class="form-control" placeholder="Number of speakers" name="nspeakers">
-      <input type="submit" value="Get me the stats!" class="btn btn-default">            
-    </div>
-  </form> */
-}

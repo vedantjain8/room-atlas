@@ -76,6 +76,7 @@ exports.up = (pgm) => {
 
   pgm.createTable("listing", {
     listing_id: { type: "serial", primaryKey: true },
+    accommodation_type: { type: "INT", notNull: false },
     listing_title: { type: "VARCHAR(255)", notNull: true },
     listing_desc: { type: "TEXT" },
     images: { type: "JSON" },
@@ -91,6 +92,18 @@ exports.up = (pgm) => {
     city: { type: "VARCHAR(255)", notNull: true },
     state: { type: "VARCHAR(255)", notNull: true },
   });
+
+  pgm.createTable("preference_listing", {
+    id: { type: "SERIAL", primaryKey: true },
+    listing_id: { type: "INT", notNull: true, references: "listing" },
+    preference_id: { type: "INT", notNull: true, references: "preferences" },
+  });
+
+  pgm.addConstraint(
+    "preference_listing",
+    "unique_preference_listing",
+    "UNIQUE (listing_id, preference_id)"
+  );
 
   pgm.createTable("amenities", {
     amenity_id: { type: "serial", primaryKey: true },
@@ -273,6 +286,67 @@ exports.up = (pgm) => {
       true,
       '2002-02-02'
   );
+  INSERT INTO users (
+      username,
+      email,
+      pass_hash,
+      question,
+      answer_hash,
+      phone,
+      user_role,
+      gender,
+      occupation,
+      city,
+      state,
+      email_verified,
+      dob
+  )
+  VALUES (
+      'adityan',
+      'adi@gmail.com',
+      '$2b$10$KiX.QKmhNYy4dqI63C8equyKV5D8DUZsfK6bvrFyJZ1It6RLdaJJW',
+      9,
+      '$2b$10$jHy14Y/Q2eWwU5j3YnCcpufIU1p6wfNqIMh3Dyvqo1tctAPV8.7oq',
+      '909059450',
+      'user',
+      'M',
+      'student',
+      'surat',
+      'gujarat',
+      true,
+      '2002-02-02'
+  );
+
+  INSERT INTO users (
+      username,
+      email,
+      pass_hash,
+      question,
+      answer_hash,
+      phone,
+      user_role,
+      gender,
+      occupation,
+      city,
+      state,
+      email_verified,
+      dob
+  )
+  VALUES (
+      'vedant',
+      'vedant@gmail.com',
+      '$2b$10$KiX.QKmhNYy4dqI63C8equyKV5D8DUZsfK6bvrFyJZ1It6RLdaJJW',
+      9,
+      '$2b$10$jHy14Y/Q2eWwU5j3YnCcpufIU1p6wfNqIMh3Dyvqo1tctAPV8.7oq',
+      '909090919',
+      'user',
+      'M',
+      'student',
+      'surat',
+      'gujarat',
+      true,
+      '2002-02-02'
+  );
 
   INSERT INTO listing (listing_title, listing_desc, images, uploaded_by, is_available, rented_on, location, city, state)
   VALUES
@@ -383,6 +457,7 @@ exports.down = (pgm) => {
   pgm.dropTable("report");
   pgm.dropTable("listing_stats");
   pgm.dropTable("listing_metadata");
+  pgm.dropTable("preference_listing");
   pgm.dropTable("listing_amenities");
   pgm.dropTable("amenities");
   pgm.dropTable("listing");

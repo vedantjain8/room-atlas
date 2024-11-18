@@ -7,7 +7,23 @@ const getUserData = require("../../functions/user");
 
 const router = express.Router();
 
-router.get("/profile/:username", authenticateToken, async function (req, res) {
+router.get("/:userID", async function (req, res) {
+  const user_id = req.params.userID;
+
+  if (!user_id) {
+    return res.status(400).json({ message: "User ID parameter is required" });
+  }
+
+  try {
+    const userProfileCache = await getUserData(user_id);
+    return res.status(200).json({ message: userProfileCache });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/profile/:username", async function (req, res) {
   const username = req.params.username;
 
   if (!username) {
