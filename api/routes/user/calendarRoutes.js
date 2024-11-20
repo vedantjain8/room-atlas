@@ -1,44 +1,37 @@
 const express = require("express");
 const pool = require("../../config/db");
 const router = express.Router();
-
-// TODO: move this function to a helper file
-const convertToUTC = (date) => {
-  const localDate = new Date(
-    date.year,
-    date.month - 1, // Adjust month to be zero-based
-    date.day,
-    date.hour,
-    date.minute,
-    0
-  );
-  const utcDate = new Date(localDate.toUTCString());
-  return `${utcDate.getUTCFullYear()}${String(
-    utcDate.getUTCMonth() + 1 // Adjust month to be 1-based
-  ).padStart(2, "0")}${String(utcDate.getUTCDate()).padStart(2, "0")}T${String(
-    utcDate.getUTCHours()
-  ).padStart(2, "0")}${String(utcDate.getUTCMinutes()).padStart(2, "0")}00Z`;
-};
+const { convertToUTC } = require("../../functions/helper");
+const getUserData = require("../../functions/user");
 
 // IDEA: can create a telementry function to count the number of times this endpoint is hit to calculate the use of this feature
-router.post("/new", async (req, res) => {
-  const { date, senderid, receiverid } = req.body;
 
-  if (!date || !senderid || !receiverid ) {
+router.get("/busy/:receiverid", async (req, res) => {
+  const receiverid = req.params.receiverid;
+  const result = await pool.query(
+    "SELECT event_start_date FROM calendar WHERE user2_id=$1",
+    [receiverid]
+  );
+
+  const data = result.rows;
+  res.status(200).json({ message: data });
+});
+
+router.post("/new", async (req, res) => {
+  const { date, senderid, receiverid, message } = req.body;
+
+  if (!date || !senderid || !receiverid) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  let eventDescription = `https://www.google.com/maps/search/21.15150934008922,+72.79589313405597`;
+  let eventDescription = `${message ?? ""}
+  
+  Location: https://www.google.com/maps/search/21.15150934008922,+72.79589313405597`;
 
-  const result = await pool.query(
-    "select (select username from users where user_id=$1) as sender, (select username from users where user_id=$2) as receiver",
-    [senderid, receiverid]
-  );
+  const senderUsername = await getUserData(senderid).username;
+  const receiverUsername = await getUserData(receiverid).username;
 
-  const sender = result.rows[0].sender;
-  const receiver = result.rows[0].receiver;
-
-  const eventTitle = `Meeting with ${sender} and ${receiver} for property viewing`;
+  const eventTitle = `Meeting with ${senderUsername} and ${receiverUsername} for property viewing`;
 
   const eventStartDate = convertToUTC(date);
 

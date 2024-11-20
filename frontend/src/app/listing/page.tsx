@@ -3,7 +3,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Spinner, Card, Select, SelectItem } from "@nextui-org/react";
 import ListingCard from "@/components/ListingCard";
 import useSWRInfinite from "swr/infinite";
-import { Button, Checkbox, Input, Skeleton, Slider } from "@nextui-org/react";
+import {
+  Button,
+  Checkbox,
+  CheckboxGroup,
+  Input,
+  Skeleton,
+  Slider,
+} from "@nextui-org/react";
 import { RefreshCw, Search } from "lucide-react";
 
 // interface ListingData {
@@ -23,21 +30,62 @@ import { RefreshCw, Search } from "lucide-react";
 // }
 
 const ListingsPage: React.FC = () => {
-  // from me
-
   const [amenities, setAmenities] = useState([]);
   const [preferences, setPreferences] = useState([]);
+  const [selectedBHK, setSelectedBHK] = useState<string[]>([]);
+  const [selectedBathroom, setSelectedBathroom] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<string[]>([]);
+  const [selectedTenant, setSelectedTenant] = useState<string[]>([]);
+  const [selectedFurnishing, setSelectedFurnishing] = useState<string[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
+  const [rentRange, setRentRange] = useState<[number, number]>([0, 50000]);
+  const [depositRange, setDepositRange] = useState<[number, number]>([
+    0, 50000,
+  ]);
 
   // Fetcher function for SWR
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+  const buildQueryParams = (filters: Record<string, any>): string => {
+    const params = new URLSearchParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (Array.isArray(value) && value.length > 1) {
+        params.append(key, value.join(","));
+      } else if (value !== undefined && value !== null && value !== "") {
+        params.append(key, value);
+      }
+    });
+
+    return params.toString();
+  };
+
   const getKey = (pageIndex: number, previousPageData: any) => {
     // If there is no more data, return null to stop fetching
     if (previousPageData && !previousPageData.data.length) return null;
+
+    // Construct query parameters for paginated fetching
+    const filters = {
+      bhk: selectedBHK,
+      bathrooms: selectedBathroom,
+      type: selectedType,
+      tenant: selectedTenant,
+      furnishing: selectedFurnishing,
+      amenities: selectedAmenities,
+      preferences: selectedPreferences,
+    };
+
+    const queryParams = buildQueryParams(filters);
     return `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/?offset=${
       pageIndex * 15
-    }`;
+    }&${queryParams}&rentMin=${rentRange[0]}&rentMax=${
+      rentRange[1]
+    }&depositMin=${depositRange[0]}&depositMax=${depositRange[1]}`;
   };
+
+  const { data, error, setSize, isLoading } = useSWRInfinite(getKey, fetcher);
 
   const fetchAmenities = async () => {
     const response = await fetch(
@@ -58,11 +106,9 @@ const ListingsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchAmenities();
-    fetchPreferences();
+    if (amenities.length === 0 || !amenities) fetchAmenities();
+    if (preferences.length === 0 || !preferences) fetchPreferences();
   }, []);
-
-  const { data, error, setSize, isLoading } = useSWRInfinite(getKey, fetcher);
 
   // Combine all fetched listings
   const listingData = data?.flatMap((page) => page.data) ?? [];
@@ -82,7 +128,20 @@ const ListingsPage: React.FC = () => {
           <div className="bg-white p-4 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">Filter</h2>
-              <Button className="text-sm font-medium bg-sky-500 text-blue-100 hover:bg-sky-400 rounded-none">
+              <Button
+                className="text-sm font-medium bg-sky-500 text-blue-100 hover:bg-sky-400 rounded-none"
+                onClick={() => {
+                  setSelectedBHK([]);
+                  setSelectedBathroom([]);
+                  setSelectedType([]);
+                  setSelectedTenant([]);
+                  setSelectedFurnishing([]);
+                  setSelectedAmenities([]);
+                  setSelectedPreferences([]);
+                  setRentRange([10000, 30000]);
+                  setDepositRange([10000, 30000]);
+                }}
+              >
                 <RefreshCw />
                 Reset
               </Button>
@@ -94,7 +153,8 @@ const ListingsPage: React.FC = () => {
                 step={50}
                 minValue={0}
                 maxValue={50000}
-                defaultValue={[10000, 50000]}
+                defaultValue={rentRange}
+                onChange={(value) => setRentRange(value as [number, number])}
                 className="max-w-md"
               />
             </div>
@@ -105,7 +165,8 @@ const ListingsPage: React.FC = () => {
                 step={50}
                 minValue={0}
                 maxValue={50000}
-                defaultValue={[10000, 50000]}
+                defaultValue={depositRange}
+                onChange={(value) => setDepositRange(value as [number, number])}
                 className="max-w-md"
               />
             </div>
@@ -115,18 +176,16 @@ const ListingsPage: React.FC = () => {
                 BHK
               </h3>
               <div className="grid grid-cols-2 items-center gap-y-2">
-                <div>
-                  <Checkbox radius="none">1bhk</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">2bhk</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">3bhk</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">4bhk+</Checkbox>
-                </div>
+                <CheckboxGroup
+                  orientation="horizontal"
+                  value={selectedBHK}
+                  onValueChange={setSelectedBHK}
+                >
+                  <Checkbox value="1">1bhk</Checkbox>
+                  <Checkbox value="2">2bhk</Checkbox>
+                  <Checkbox value="3">3bhk</Checkbox>
+                  <Checkbox value="4">4bhk+</Checkbox>
+                </CheckboxGroup>
               </div>
             </div>
             <div className="mb-4">
@@ -134,33 +193,31 @@ const ListingsPage: React.FC = () => {
                 Bathrooms
               </h3>
               <div className="grid grid-cols-2 items-center gap-y-2">
-                <div>
-                  <Checkbox radius="none">1</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">2</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">3</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">4</Checkbox>
-                </div>
+                <CheckboxGroup
+                  orientation="horizontal"
+                  value={selectedBathroom}
+                  onValueChange={setSelectedBathroom}
+                >
+                  <Checkbox value="1">1</Checkbox>
+                  <Checkbox value="2">2</Checkbox>
+                  <Checkbox value="3">3</Checkbox>
+                  <Checkbox value="4">4</Checkbox>
+                </CheckboxGroup>
               </div>
             </div>
 
             <div className="mb-4">
               <h3 className="text-sm font-bold mb-2">Type</h3>
               <div className="grid grid-cols-2 gap-y-2">
-                <div>
-                  <Checkbox radius="none">Apartment</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">Villa</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">Bungalow</Checkbox>
-                </div>
+                <CheckboxGroup
+                  orientation="horizontal"
+                  value={selectedType}
+                  onValueChange={setSelectedType}
+                >
+                  <Checkbox value="1">Apartment</Checkbox>
+                  <Checkbox value="2">Villa</Checkbox>
+                  <Checkbox value="3">Bungalow</Checkbox>
+                </CheckboxGroup>
               </div>
             </div>
 
@@ -169,15 +226,14 @@ const ListingsPage: React.FC = () => {
                 Tenant
               </h3>
               <div className="grid grid-cols-2 items-center gap-y-2">
-                <div>
-                  <Checkbox radius="none">Student</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">Company</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">Family</Checkbox>
-                </div>
+                <CheckboxGroup
+                  orientation="horizontal"
+                  value={selectedTenant}
+                  onValueChange={setSelectedTenant}
+                >
+                  <Checkbox value="1">Student</Checkbox>
+                  <Checkbox value="2">Company</Checkbox>
+                </CheckboxGroup>
               </div>
             </div>
 
@@ -186,15 +242,15 @@ const ListingsPage: React.FC = () => {
                 Furnishings
               </h3>
               <div className="grid grid-cols-2 items-center gap-y-2">
-                <div>
-                  <Checkbox radius="none">No furnishings</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">Half-furnished</Checkbox>
-                </div>
-                <div>
-                  <Checkbox radius="none">Full-furnished</Checkbox>
-                </div>
+                <CheckboxGroup
+                  orientation="horizontal"
+                  value={selectedFurnishing}
+                  onValueChange={setSelectedFurnishing}
+                >
+                  <Checkbox value="1">No furnishings</Checkbox>
+                  <Checkbox value="2">Half-furnished</Checkbox>
+                  <Checkbox value="3">Full-furnished</Checkbox>
+                </CheckboxGroup>
               </div>
             </div>
 
@@ -203,17 +259,23 @@ const ListingsPage: React.FC = () => {
                 Amenities
               </h3>
               <div className="grid grid-cols-2 items-center gap-y-2">
-                {amenities.map(
-                  (amenity: { amenity_id: string; amenity_name: string }) => (
-                    <Checkbox
-                      key={amenity.amenity_id}
-                      id={`amenity-${amenity.amenity_id}`}
-                      radius="none"
-                    >
-                      {amenity.amenity_name}
-                    </Checkbox>
-                  )
-                )}
+                <CheckboxGroup
+                  orientation="vertical"
+                  value={selectedAmenities}
+                  onValueChange={setSelectedAmenities}
+                >
+                  {amenities.map(
+                    (amenity: { amenity_id: string; amenity_name: string }) => (
+                      <Checkbox
+                        key={amenity.amenity_id}
+                        id={`amenity-${amenity.amenity_id}`}
+                        value={amenity.amenity_id}
+                      >
+                        {amenity.amenity_name}
+                      </Checkbox>
+                    )
+                  )}
+                </CheckboxGroup>
               </div>
             </div>
             <div className="mb-4">
@@ -221,33 +283,34 @@ const ListingsPage: React.FC = () => {
                 Preferences
               </h3>
               <div className="grid grid-cols-2 items-center gap-y-2">
-                {preferences.map(
-                  (preference: {
-                    preference_id: string;
-                    preference: string;
-                  }) => (
-                    <Checkbox
-                      key={preference.preference_id}
-                      id={`preference-${preference.preference_id}`}
-                      radius="none"
-                    >
-                      {preference.preference}
-                    </Checkbox>
-                  )
-                )}
+                <CheckboxGroup
+                  orientation="vertical"
+                  value={selectedPreferences}
+                  onValueChange={setSelectedPreferences}
+                >
+                  {preferences.map(
+                    (preference: {
+                      preference_id: string;
+                      preference: string;
+                    }) => (
+                      <Checkbox
+                        key={preference.preference_id}
+                        id={`preference-${preference.preference_id}`}
+                        value={preference.preference_id}
+                      >
+                        {preference.preference}
+                      </Checkbox>
+                    )
+                  )}
+                </CheckboxGroup>
               </div>
-            </div>
-
-            <div className="flex justify-center mt-4">
-              <Button className="rounded-none bg-sky-500 text-white">
-                Filter
-              </Button>
             </div>
           </div>
         </div>
 
         <div className="lg:w-9/12 pl-4">
           <div className="sticky top-20 w-10/12 md:w-8/12 flex ml-8 p-3 bg-white md:fixed rounded-lg shadow-lg items-center h-14 z-30">
+          {/* TODO: search pending */}
             <Input
               type="search"
               placeholder="type to search..."

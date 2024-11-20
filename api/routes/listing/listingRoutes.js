@@ -4,21 +4,42 @@ const redisClient = require("../../config/dbredis");
 const { authenticateToken } = require("../../middleware/jwtMiddleware");
 const settings = require("../../config/settings");
 const getUserData = require("../../functions/user");
+const {
+  incrementViewCount,
+  incrementLikeCount,
+  incrementShareCount,
+  getViewCount,
+  getLikeCount,
+  getShareCount,
+  setViewCount,
+  setLikeCount,
+  setShareCount,
+} = require("../../functions/stats");
 
 const router = express.Router();
 
+router.use("/review", require("./reviewRoutes"));
+
 router.get("/", async (req, res) => {
   const offset = Number(req.query.offset) || 0;
-  const bhk = Number(req.query.bhk);
+  const bhk = req.query.bhk ? req.query.bhk.split(",").map(Number) : [];
   const rentMin = Number(req.query.rentMin) || 0;
   const rentMax = Number(req.query.rentMax) || 999999;
   const depositMin = Number(req.query.depositMin) || 0;
   const depositMax = Number(req.query.depositMax) || 999999;
-  const bathrooms = Number(req.query.bathrooms);
-  const type = Number(req.query.type);
-  const tenants = Number(req.query.tenants);
-  const furnishing = Number(req.query.furnishing);
-  const amenities = req.query.amenities ? req.query.amenities.split(",") : [];
+  const bathrooms = req.query.bathrooms
+    ? req.query.bathrooms.split(",").map(Number)
+    : [];
+  const type = req.query.type ? req.query.type.split(",").map(Number) : [];
+  const tenants = req.query.tenants
+    ? req.query.tenants.split(",").map(Number)
+    : [];
+  const furnishing = req.query.furnishing
+    ? req.query.furnishing.split(",").map(Number)
+    : [];
+  const amenities = req.query.amenities
+    ? req.query.amenities.split(",").map(Number)
+    : [];
   const preferences = req.query.preferences
     ? req.query.preferences.split(",")
     : [];
@@ -28,10 +49,11 @@ router.get("/", async (req, res) => {
   let idx = 2;
 
   // Add filters dynamically
-  if (bhk) {
-    filters.push(`lm.bedrooms = $${idx++}`);
-    values.push(bhk);
+  if (bhk.length > 0) {
+    filters.push(`lm.bedrooms IN (${bhk.map(() => `$${idx++}`).join(",")})`);
+    values.push(...bhk);
   }
+
   if (rentMin !== undefined && rentMax !== undefined) {
     filters.push(`lm.rent BETWEEN $${idx++} AND $${idx++}`);
     values.push(rentMin, rentMax);
@@ -40,25 +62,35 @@ router.get("/", async (req, res) => {
     filters.push(`lm.deposit BETWEEN $${idx++} AND $${idx++}`);
     values.push(depositMin, depositMax);
   }
-  if (bathrooms) {
-    filters.push(`lm.bathrooms = $${idx++}`);
-    values.push(bathrooms);
+  if (bathrooms.length > 0) {
+    filters.push(
+      `lm.bathrooms IN (${bathrooms.map(() => `$${idx++}`).join(",")})`
+    );
+    values.push(...bathrooms);
   }
-  if (type) {
-    filters.push(`lm.listing_type = $${idx++}`);
-    values.push(type);
+  if (type.length > 0) {
+    filters.push(
+      `lm.listing_type IN (${type.map(() => `$${idx++}`).join(",")})`
+    );
+    values.push(...type);
   }
-  if (tenants) {
-    filters.push(`lm.prefered_tenants = $${idx++}`);
-    values.push(tenants);
+  if (tenants.length > 0) {
+    filters.push(
+      `lm.prefered_tenants IN (${tenants.map(() => `$${idx++}`).join(",")})`
+    );
+    values.push(...tenants);
   }
-  if (furnishing) {
-    filters.push(`lm.furnishing = $${idx++}`);
-    values.push(furnishing);
+  if (furnishing.length > 0) {
+    filters.push(
+      `lm.furnishing IN (${furnishing.map(() => `$${idx++}`).join(",")})`
+    );
+    values.push(...furnishing);
   }
-  if (amenities.length) {
-    filters.push(`a.amenity_name = ANY($${idx++})`);
-    values.push(amenities);
+  if (amenities.length > 0) {
+    filters.push(
+      `a.amenity_id IN (${amenities.map(() => `$${idx++}`).join(",")})`
+    );
+    values.push(...amenities);
   }
   if (preferences.length) {
     filters.push(`
@@ -73,11 +105,19 @@ router.get("/", async (req, res) => {
 
   const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
-  // TODO: fix this
-  // let data = await redisClient.get(`listings-${offset}-${JSON.stringify(req.query)}`);
-  // if (data) {
-  //   return res.status(200).json({ message: "Listing", data: JSON.parse(data) });
-  // }
+  const filter_hash = require("crypto")
+    .createHash("md5")
+    .update(whereClause)
+    .digest("hex");
+
+  // Check if the data is cached in Redis
+  let data = await redisClient.hGet(
+    "listings",
+    `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`
+  );
+  if (data) {
+    return res.status(200).json({ message: "Listing", data: JSON.parse(data) });
+  }
 
   const query = `
     SELECT 
@@ -140,12 +180,11 @@ router.get("/", async (req, res) => {
     const result = await pool.query(query, values);
 
     // // Cache the results in Redis
-    // await redisClient.set(
-    //   `listings-${offset}-${JSON.stringify(req.query)}`,
-    //   JSON.stringify(result.rows),
-    //   "EX",
-    //   3600 // Cache for 1 hour
-    // );
+    await redisClient.hSet(
+      "listings",
+      `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`,
+      JSON.stringify(result.rows)
+    );
 
     return res.status(200).json({ message: "Listing", data: result.rows });
   } catch (error) {
@@ -285,7 +324,7 @@ router.post("/create", authenticateToken, async (req, res) => {
     // Batch insert amenities (if any)
     if (amenities_list && amenities_list.length > 0) {
       const amenitiesQuery = `
-        INSERT INTO listing_amenities (listing_id, amenity_id)
+        INSERT INTO listing_amenities_link (listing_id, amenity_id)
         SELECT $1, UNNEST($2::INT[])
         ON CONFLICT (listing_id, amenity_id) DO NOTHING;
       `;
@@ -329,6 +368,7 @@ router.get("/:id", async (req, res) => {
     const cachedListing = await redisClient.get(`listing:${listing_id}`);
 
     if (cachedListing) {
+      await incrementViewCount(listing_id);
       return res.status(200).json({ message: JSON.parse(cachedListing) });
     }
 
@@ -363,7 +403,7 @@ router.get("/:id", async (req, res) => {
       ON 
           listing.listing_id = lm.listing_id
       LEFT JOIN 
-          listing_amenities la
+          listing_amenities_link la
       ON 
           listing.listing_id = la.listing_id
       LEFT JOIN
@@ -397,6 +437,8 @@ router.get("/:id", async (req, res) => {
       JSON.stringify(result.rows[0])
     );
 
+    await incrementViewCount(listing_id);
+
     return res.status(200).json({ message: result.rows[0] });
   } catch (error) {
     console.error("Error fetching listing:", error);
@@ -404,99 +446,70 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// router.get("/:id/stats", async (req, res) => {
-//   const listing_id = req.params.id;
-//   const statsKey = `stats:${listing_id}`;
+router.get("/:id/stats", async (req, res) => {
+  const listing_id = req.params.id;
 
-//   try {
-//     const cachedStats = await redisClient.hGet("stats", listing_id);
+  try {
+    const likeCount = await getLikeCount(listing_id);
+    const viewCount = await getViewCount(listing_id);
+    const shareCount = await getShareCount(listing_id);
 
-//     if (cachedStats) {
-//       return res.status(200).json({
-//         message: JSON.parse(cachedStats),
-//       });
-//     }
+    if (likeCount !== null || viewCount !== null || shareCount !== null) {
+      return res.status(200).json({
+        message: { views: viewCount, likes: likeCount, shares: shareCount },
+      });
+    }
 
-//     const result = await pool.query(
-//       "SELECT views, likes, shares FROM listing_stats WHERE listing_id = $1",
-//       [listing_id]
-//     );
-//     if (result.rows.length !== 0) {
-//       const data = result.rows[0];
-//       await redisClient.hset("stats", listing_id, JSON.stringify(data));
-//       return res.status(200).json({ message: data });
-//     } else {
-//       return res.status(400).json({ message: "No stats found" });
-//     }
-//   } catch (error) {
-//     console.error("Error handling stats for listing:", error);
-//     return res
-//       .status(500)
-//       .json({ message: "Server error occurred. Please try again." });
-//   }}
+    const result = await pool.query(
+      "SELECT views, likes, shares FROM listing_stats WHERE listing_id = $1",
+      [listing_id]
+    );
 
-//   // Route to handle likes, shares, and views
-//   router.get("/:id/:action", async (req, res) => {
-//     const listing_id = parseInt(req.params.id);
-//     const action = req.params.action; // like, share, view
+    if (result.rows.length !== 0) {
+      const data = result.rows[0];
 
-//     if (!action) {
-//       return res.status(400).json({ message: "Action is required" });
-//     }
+      Promise.all([
+        setViewCount(listing_id, data.views),
+        setLikeCount(listing_id, data.likes),
+        setShareCount(listing_id, data.shares),
+      ]);
 
-//     try {
-//       // Check if stats for the listing are cached
-//       let cachedStats = await redisClient.hget("stats", listing_id);
+      return res.status(200).json({ message: data });
+    } else {
+      return res.status(400).json({ message: "No stats found" });
+    }
+  } catch (error) {
+    console.error("Error handling stats for listing:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error occurred. Please try again." });
+  }
+});
 
-//       if (!cachedStats) {
-//         // Fetch stats from the database if not cached
-//         const result = await pool.query(
-//           "SELECT views, likes, shares FROM listing_stats WHERE listing_id = $1",
-//           [listing_id]
-//         );
+// Route to handle likes, shares, and views
+router.get("/:listing_id/:action", authenticateToken, async (req, res) => {
+  const listing_id = parseInt(req.params.listing_id);
+  const action = req.params.action; // like, share, view
 
-//         if (result.rows.length !== 0) {
-//           cachedStats = JSON.stringify(result.rows[0]);
-//           // TODO: yaha pe 3 if statement aye ge joh view, like, share ke liye hoge
-//           // and if condition ke block me incremnt honge respective values
-//           // and then redis me hset hoga
-//           return res.status(200).json({ message: JSON.parse(cachedStats) });
-//         } else {
-//           return res.status(400).json({ message: "No stats found" });
-//         }
+  if (!action) {
+    return res.status(400).json({ message: "Action is required" });
+  }
 
-//         // Cache the stats
-//         await redisClient.hset("stats", listing_id, cachedStats);
-//       }
-
-//       const stats = JSON.parse(cachedStats);
-
-//       // Update stats based on the action
-//       if (action === "view") {
-//         stats.views += 1;
-//       } else if (action === "like") {
-//         stats.likes += 1;
-//       } else if (action === "share") {
-//         stats.shares += 1;
-//       } else {
-//         return res.status(400).json({ message: "Invalid action specified" });
-//       }
-
-//       // Save updated stats back to Redis
-//       await redisClient.hset("stats", listing_id, JSON.stringify(stats));
-
-//       // Update stats in the database
-//       await pool.query(
-//         "UPDATE listing_stats SET views = $1, likes = $2, shares = $3 WHERE listing_id = $4",
-//         [stats.views, stats.likes, stats.shares, listing_id]
-//       );
-
-//       return res.status(200).json({ message: stats });
-//     } catch (error) {
-//       console.error("Error updating likes, shares, or views:", error);
-//       return res.status(500).json({ message: "Server error" });
-//     }
-//   });
-// });
+  try {
+    if (action === "like") {
+      incrementLikeCount(listing_id);
+    }
+    if (action === "share") {
+      incrementShareCount(listing_id);
+    }
+    // if (action === "view") {
+    //   await incrementViewCount(listing_id);
+    // }
+    return res.status(200).json({ message: `${action} incremented.` });
+  } catch (error) {
+    console.error("Error updating likes, shares, or views:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;

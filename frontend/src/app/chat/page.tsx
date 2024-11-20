@@ -7,7 +7,9 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import CalendarPage from "@/components/calendar";
 import { Input } from "@nextui-org/react";
 
-const socket = io(`${process.env.NEXT_PUBLIC_HOSTNAME}`);
+const socket = io(`${process.env.NEXT_PUBLIC_HOSTNAME}`, {
+  autoConnect: false, // Prevent auto-connection before user authentication
+});
 
 interface Message {
   message_id: number;
@@ -22,29 +24,30 @@ interface Message {
 const fetcher = (url: string) =>
   fetch(url)
     .then((res) => res.json())
-    .then((data) => data.message); // Extract the "message" array
+    .then((data) => data.message);
 
 export default function ChatPage() {
   const { user } = useAuth(); // Current logged-in user
-  const [receiverId, setReceiverId] = useState<string>(""); // Default receiver
+  const [receiverId, setReceiverId] = useState<string>("");
+  const [receiverName, setReceiverName] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
-  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [isConnected, setIsConnected] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [peopleChatList, setPeopleChatList] = useState([]);
 
   function capitalizeFirstLetter(text: string) {
-    if (!text) return '';
+    if (!text) return "";
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
+  // Fetch receiverId from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const receiverParam = params.get("receiverId");
     if (receiverParam) setReceiverId(receiverParam);
   }, []);
 
-  // SWR to fetch chat history
+  // Fetch chat history
   const { data: history } = useSWR(
     user && receiverId
       ? `${process.env.NEXT_PUBLIC_HOSTNAME}/chat/chat-history/${user.user_id}/${receiverId}`
@@ -52,7 +55,7 @@ export default function ChatPage() {
     fetcher
   );
 
-  const { data: fetchPeopleChatList, error: chatPeopleError } = useSWR(
+  const { data: fetchPeopleChatList } = useSWR(
     user
       ? `${process.env.NEXT_PUBLIC_HOSTNAME}/chat/people/${user.user_id}`
       : null,
@@ -60,36 +63,49 @@ export default function ChatPage() {
   );
 
   useEffect(() => {
-    if (fetchPeopleChatList) 
-      setPeopleChatList(fetchPeopleChatList);
-    
-  }, [fetchPeopleChatList]);
-
-  useEffect(() => {
     if (history) setMessages(history);
   }, [history]);
 
+  // Initialize socket connection and listeners
   useEffect(() => {
-    socket.on("connect", () => {
-      socket.emit("identify", user?.user_id);
+    if (!user) return;
+
+    // Connect and authenticate
+    socket.connect();
+    socket.emit("identify", user.user_id);
+
+    // Manage connection events
+    const handleConnect = () => {
+      console.log("Connected to server");
       setIsConnected(true);
-    });
+    };
+    const handleDisconnect = () => {
+      console.log("Disconnected from server");
+      setIsConnected(false);
+    };
 
-    socket.on("disconnect", () => setIsConnected(false));
+    // Handle incoming chat messages
+    const handleChatMessage = (data: Message) => {
+      setMessages((prevMessages) => [...prevMessages, data]);
+    };
 
-    socket.on("chatMessage", (data: Message) =>
-      setMessages((prev) => [...prev, data])
-    );
+    // Register socket events
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("chatMessage", handleChatMessage);
 
+    // Cleanup listeners on unmount
     return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("chatMessage");
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("chatMessage", handleChatMessage);
+      socket.disconnect();
     };
   }, [user]);
 
+  // Send a new message
   const sendMessage = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !receiverId) return;
 
     const newMessage = {
       message_id: Date.now(),
@@ -101,6 +117,7 @@ export default function ChatPage() {
     };
     setMessages((prev) => [...prev, newMessage]);
 
+    // Emit the chat message to the server
     socket.emit("chatMessage", {
       sender: user?.user_id,
       receiver: receiverId,
@@ -136,33 +153,34 @@ export default function ChatPage() {
         </div>
         <div className="p-4 space-y-4">
           {fetchPeopleChatList &&
-            fetchPeopleChatList.map((user: any) => {
-              return (
-                <button
-                  key={user.user_id}
-                  className={`w-full text-left px-4 py-3 rounded-lg ${
-                    receiverId === `${user.user_id}`
-                      ? "bg-sky-100 text-sky-700"
-                      : "hover:bg-gray-100"
-                  }`}
-                  onClick={() => setReceiverId(`${user.user_id}`)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
-                      alt={`User ${user.user_id}`}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <h3 className="font-semibold text-gray-800">
-                        {capitalizeFirstLetter(user.username)}
-                      </h3>
-                      <p className="text-sm text-gray-500">Property Name</p>
-                    </div>
+            fetchPeopleChatList.map((user: any) => (
+              <button
+                key={user.user_id}
+                className={`w-full text-left px-4 py-3 rounded-lg ${
+                  receiverId === `${user.user_id}`
+                    ? "bg-sky-100 text-sky-700"
+                    : "hover:bg-gray-100"
+                }`}
+                onClick={() => {
+                  setReceiverId(`${user.user_id}`);
+                  setReceiverName(user.username);
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
+                    alt={`User ${user.user_id}`}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div>
+                    <h3 className="font-semibold text-gray-800">
+                      {capitalizeFirstLetter(user.username)}
+                    </h3>
+                    <p className="text-sm text-gray-500">Property Name</p>
                   </div>
-                </button>
-              );
-            })}
+                </div>
+              </button>
+            ))}
         </div>
       </div>
 
@@ -177,13 +195,11 @@ export default function ChatPage() {
             >
               ☰
             </button>
-            <h1 className="text-lg font-semibold">
-              {user.username}
-            </h1>
+            <h1 className="text-lg font-semibold">{receiverName}</h1>
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 p-6 bg-gray-50 mt-16 pb-44">
+          <div className="flex-1 p-6 bg-gray-50 mt-16 pb-44 break-words">
             {messages.map((msg) => (
               <div
                 key={msg.message_id}
@@ -194,11 +210,15 @@ export default function ChatPage() {
                 } p-3 rounded-xl shadow-sm`}
               >
                 <p className="text-sm font-semibold">
-                  {msg.sender_id === user?.user_id
-                    ? "You"
-                    : `User ${msg.sender_id}`}
+                  {msg.sender_id === user?.user_id ? "You" : `${receiverName}`}
                 </p>
-                <p className="mt-1 text-gray-700">{msg.message}</p>
+                <p className="mt-1 text-gray-700">
+                  {msg.message.startsWith("http") ? (
+                    <a href={msg.message}>{msg.message}</a>
+                  ) : (
+                    msg.message
+                  )}
+                </p>
                 <p className="mt-1 text-xs text-gray-500">
                   {new Date(msg.created_at).toLocaleString()}
                 </p>

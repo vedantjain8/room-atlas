@@ -23,13 +23,15 @@ module.exports = (io, pool) => {
       await pool.query(query, [sender, receiver, message]);
 
       // Send the message to the receiver if they're online
-      await redisClient.hGet("WS-users", receiver, (err, receiverSocketId) => {
-        if (err) {
-          console.error(`WS> ${err}`);
-          throw new Error(err);
-        }
-        io.to(receiverSocketId).emit("chatMessage", { sender, message });
-      });
+      const receiverSocketId = await redisClient.hGet(
+        "WS-users",
+        receiver.toString()
+      );
+      if (!receiverSocketId) {
+        return;
+      }
+
+      io.to(receiverSocketId).emit("chatMessage", { sender, message });
     });
 
     // When the user disconnects

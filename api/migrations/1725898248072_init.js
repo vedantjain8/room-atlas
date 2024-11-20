@@ -144,6 +144,26 @@ exports.up = (pgm) => {
     shares: { type: "INT", notNull: true, default: 0 },
   });
 
+  pgm.createFunction(
+    "create_listing_stats",
+    [],
+    { returns: "trigger", language: "plpgsql", replace: true },
+    `
+    BEGIN
+      INSERT INTO listing_stats (listing_id)
+      VALUES (NEW.listing_id);
+      RETURN NEW;
+    END;
+    `
+  );
+
+  pgm.createTrigger("listing", "listing_stats_insert_trigger", {
+    when: "after",
+    operation: "INSERT",
+    level: "ROW",
+    function: "create_listing_stats",
+  });
+
   pgm.createTable("report", {
     report_id: { type: "serial", primaryKey: true },
     reported_by: { type: "INT", notNull: true, references: "users" },
@@ -155,6 +175,11 @@ exports.up = (pgm) => {
       default: pgm.func("current_timestamp"),
     },
   });
+  pgm.addConstraint(
+    "report",
+    "unique_report",
+    "UNIQUE (reported_by, listing_id)"
+  );
 
   pgm.createTable("messages", {
     message_id: { type: "serial", primaryKey: true },
@@ -181,18 +206,30 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.createTable("listing_ratings", {
+  pgm.addConstraint(
+    "user_ratings",
+    "unique_user_ratings",
+    "UNIQUE (user_id, rated_by)"
+  );
+
+  pgm.createTable("listing_review", {
     id: { type: "serial", primaryKey: true },
     listing_id: { type: "INT", notNull: true, references: "listing" },
-    ratings: { type: "DECIMAL(10, 2)", notNull: true },
-    comments: { type: "TEXT", default: null },
-    rated_by: { type: "INT", notNull: true, references: "users" },
+    // ratings: { type: "DECIMAL(10, 2)", notNull: true },
+    review: { type: "TEXT", default: null },
+    user_id: { type: "INT", notNull: true, references: "users" },
     created_at: {
       type: "TIMESTAMP",
       notNull: true,
       default: pgm.func("current_timestamp"),
     },
   });
+
+  pgm.addConstraint(
+    "listing_review",
+    "unique_listing_reviews",
+    "UNIQUE (user_id, listing_id)"
+  );
 
   pgm.createTable("image_upload_log", {
     id: { type: "serial", primaryKey: true },
@@ -439,6 +476,36 @@ exports.up = (pgm) => {
   (25, 3),
   (26, 1), (26, 2);
 
+  INSERT INTO preference_listing (listing_id, preference_id)
+VALUES
+  (1, 1), (1, 6),
+  (2, 3), (2, 4),
+  (3, 2), (3, 7),
+  (4, 5), (4, 6),
+  (5, 1), (5, 3), (5, 4),
+  (6, 2), (6, 7),
+  (7, 5), (7, 6),
+  (8, 1), (8, 6),
+  (9, 3), (9, 5),
+  (10, 2), (10, 4),
+  (11, 1), (11, 7),
+  (12, 5), (12, 6),
+  (13, 1), (13, 3),
+  (14, 4), (14, 7),
+  (15, 5), (15, 6),
+  (16, 2), (16, 7),
+  (17, 5), (17, 6),
+  (18, 1), (18, 5),
+  (19, 2), (19, 7),
+  (20, 3), (20, 4),
+  (21, 6), (21, 7),
+  (22, 1), (22, 5),
+  (23, 2), (23, 7),
+  (24, 5), (24, 6),
+  (25, 1), (25, 4),
+  (26, 2), (26, 3);
+
+
 
   `);
 };
@@ -451,19 +518,21 @@ exports.up = (pgm) => {
 exports.down = (pgm) => {
   pgm.dropTable("feedback");
   pgm.dropTable("image_upload_log");
-  pgm.dropTable("listing_ratings");
+  pgm.dropTable("listing_review");
   pgm.dropTable("user_ratings");
   pgm.dropTable("messages");
   pgm.dropTable("report");
+  pgm.dropTrigger("listing", "listing_stats_insert_trigger");
+  pgm.dropFunction("create_listing_stats");
   pgm.dropTable("listing_stats");
   pgm.dropTable("listing_metadata");
-  pgm.dropTable("preference_listing");
   pgm.dropTable("listing_amenities");
   pgm.dropTable("amenities");
+  pgm.dropTable("preference_listing");
   pgm.dropTable("listing");
   pgm.dropTable("refresh_token");
   pgm.dropTable("preference_user_link");
-  pgm.dropTable("preferences");
   pgm.dropTable("users");
   pgm.dropTable("security_questions");
+  pgm.dropTable("preferences");
 };
