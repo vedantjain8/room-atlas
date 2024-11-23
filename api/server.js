@@ -16,6 +16,8 @@ const userProfileRoutes = require("./routes/user/userProfileRoutes");
 const feedbackRoutes = require("./routes/pages/feedbackRoutes");
 const calendarRoutes = require("./routes/user/calendarRoutes");
 const jwtRoutes = require("./routes/jwtRoutes");
+const roommatesRoutes = require("./routes/room_mates/roommatesRoutes");
+const reviewRoutes = require("./routes/listing/reviewRoutes");
 
 const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
 const settings = require("./config/settings");
@@ -55,6 +57,8 @@ app.use(uploadImageRoutes);
 // routes for logging
 app.use("/user", userRoutes);
 app.use("/listing", listingRoutes);
+app.use("/roommate", roommatesRoutes);
+app.use("/review", reviewRoutes);
 app.use("/chat", chattingRoutes);
 app.use("/verify", verificationRoutes);
 app.use("/user", userProfileRoutes);

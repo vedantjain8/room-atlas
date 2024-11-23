@@ -110,7 +110,7 @@ router.get(
         ON 
           listing.listing_id = lm.listing_id
         LEFT JOIN 
-          listing_amenities_link la
+          listing_amenities la
         ON 
           listing.listing_id = la.listing_id
         LEFT JOIN

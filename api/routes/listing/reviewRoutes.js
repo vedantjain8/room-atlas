@@ -32,8 +32,8 @@ router.post("/create", authenticateToken, async (req, res) => {
   res.status(200).json({ message: "Review created" });
 });
 
-router.get("/", async (req, res) => {
-  const listing_id = req.body.listing_id;
+router.get("/:listing_id", async (req, res) => {
+  const listing_id = req.params.listing_id;
 
   const cache = await redisClient.hGet("listing_reviews", listing_id);
   if (cache) {

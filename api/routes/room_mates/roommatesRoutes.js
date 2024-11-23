@@ -20,6 +20,12 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   const offset = Number(req.query.offset) || 0;
+  const roommates_needed = req.query.roommates_needed
+    ? req.query.roommates_needed.split(",")
+    : [];
+  const max_roommates = req.query.max_roommates
+    ? req.query.max_roommates.split(",")
+    : [];
   const bhk = req.query.bhk ? req.query.bhk.split(",").map(Number) : [];
   const rentMin = Number(req.query.rentMin) || 0;
   const rentMax = Number(req.query.rentMax) || 999999;
@@ -51,45 +57,47 @@ router.get("/", async (req, res) => {
 
   // Add filters dynamically
   if (bhk.length > 0) {
-    filters.push(`lm.bedrooms IN (${bhk.map(() => `$${idx++}`).join(",")})`);
+    filters.push(`rlm.bedrooms IN (${bhk.map(() => `$${idx++}`).join(",")})`);
     values.push(...bhk);
   }
-
+  if (roommates_needed.length > 0) {
+    filters.push(
+      `rlm.roommates_needed IN (${roommates_needed
+        .map(() => `$${idx++}`)
+        .join(",")})`
+    );
+    values.push(...roommates_needed);
+  }
+  if (max_roommates.length > 0) {
+    filters.push(
+      `rlm.max_roommates IN (${max_roommates.map(() => `$${idx++}`).join(",")})`
+    );
+    values.push(...max_roommates);
+  }
   if (rentMin !== undefined && rentMax !== undefined) {
-    filters.push(`lm.rent BETWEEN $${idx++} AND $${idx++}`);
+    filters.push(`rlm.rent BETWEEN $${idx++} AND $${idx++}`);
     values.push(rentMin, rentMax);
   }
   if (depositMin !== undefined && depositMax !== undefined) {
-    filters.push(`lm.deposit BETWEEN $${idx++} AND $${idx++}`);
+    filters.push(`rlm.deposit BETWEEN $${idx++} AND $${idx++}`);
     values.push(depositMin, depositMax);
   }
-  if (accommodation_type.length > 0) {
-    filters.push(`listing.accommodation_type IN (${accommodation_type})`);
-    values.push(...accommodation_type);
-  } else {
-    filters.push(`listing.accommodation_type IN (0,1,2)`);
-  }
+
   if (bathrooms.length > 0) {
     filters.push(
-      `lm.bathrooms IN (${bathrooms.map(() => `$${idx++}`).join(",")})`
+      `rlm.bathrooms IN (${bathrooms.map(() => `$${idx++}`).join(",")})`
     );
     values.push(...bathrooms);
   }
   if (type.length > 0) {
     filters.push(
-      `lm.listing_type IN (${type.map(() => `$${idx++}`).join(",")})`
+      `rlm.listing_type IN (${type.map(() => `$${idx++}`).join(",")})`
     );
     values.push(...type);
   }
-  if (tenants.length > 0) {
-    filters.push(
-      `lm.prefered_tenants IN (${tenants.map(() => `$${idx++}`).join(",")})`
-    );
-    values.push(...tenants);
-  }
   if (furnishing.length > 0) {
     filters.push(
-      `lm.furnishing IN (${furnishing.map(() => `$${idx++}`).join(",")})`
+      `rlm.furnishing IN (${furnishing.map(() => `$${idx++}`).join(",")})`
     );
     values.push(...furnishing);
   }
@@ -100,15 +108,13 @@ router.get("/", async (req, res) => {
     values.push(...amenities);
   }
   if (preferences.length) {
-    filters.push(`
-      EXISTS (
-        SELECT 1 FROM preference_listing pl
-        WHERE pl.listing_id = listing.listing_id
-        AND pl.preference_id = ANY($${idx++})
-      )
-    `);
+    filters.push(
+      `pl.preference_id IN (${preferences.map(() => `$${idx++}`).join(",")})`
+    );
     values.push(preferences.map(Number));
   }
+
+  filters.push(`listing.accommodation_type IN (99)`);
 
   const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
@@ -120,10 +126,14 @@ router.get("/", async (req, res) => {
   // Check if the data is cached in Redis
   let data = await redisClient.hGet(
     "listings",
-    `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`
+    `roomate-listings-${offset}-${
+      offset + settings.database.limit
+    }-${filter_hash}`
   );
   if (data) {
-    return res.status(200).json({ message: "Listing", data: JSON.parse(data) });
+    return res
+      .status(200)
+      .json({ message: "roommate listing", data: JSON.parse(data) });
   }
 
   const query = `
@@ -138,24 +148,23 @@ router.get("/", async (req, res) => {
       listing.area,
       listing.city,
       listing.state,
-      lm.listing_type,
-      lm.prefered_tenants,
-      lm.is_available,
-      lm.bedrooms,
-      lm.bathrooms,
-      lm.rent,
-      lm.deposit,
-      lm.furnishing,
-      lm.floor,
-      lm.total_floors,
-      lm.areasqft,
+      rlm.listing_type,
+      rlm.is_available,
+      rlm.bedrooms,
+      rlm.bathrooms,
+      rlm.rent,
+      rlm.deposit,
+      rlm.furnishing,
+      rlm.floor,
+      rlm.total_floors,
+      rlm.areasqft,
       ARRAY_AGG(a.amenity_name) AS amenities
     FROM
       listing
     JOIN 
-      listing_metadata lm
+      roommate_listing_metadata rlm
     ON 
-      listing.listing_id = lm.listing_id
+      listing.listing_id = rlm.listing_id
     LEFT JOIN 
       listing_amenities la
     ON 
@@ -167,17 +176,16 @@ router.get("/", async (req, res) => {
     ${whereClause}
     GROUP BY 
       listing.listing_id,
-      lm.listing_type,
-      lm.prefered_tenants,
-      lm.is_available,
-      lm.bedrooms,
-      lm.bathrooms,
-      lm.rent,
-      lm.deposit,
-      lm.furnishing,
-      lm.floor,
-      lm.total_floors,
-      lm.areasqft
+      rlm.listing_type,
+      rlm.is_available,
+      rlm.bedrooms,
+      rlm.bathrooms,
+      rlm.rent,
+      rlm.deposit,
+      rlm.furnishing,
+      rlm.floor,
+      rlm.total_floors,
+      rlm.areasqft
     ORDER BY listing.listing_id DESC
     LIMIT ${settings.database.limit} 
     OFFSET $1
@@ -186,18 +194,25 @@ router.get("/", async (req, res) => {
   try {
     const result = await pool.query(query, values);
 
-    // // Cache the results in Redis
+    // Cache the results in Redis
     await redisClient.hSet(
       "listings",
-      `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`,
+      `roommate-listings-${offset}-${
+        offset + settings.database.limit
+      }-${filter_hash}`,
       JSON.stringify(result.rows)
     );
     await redisClient.hExpire(
       "listings",
-      `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`,
+      `roommate-listings-${offset}-${
+        offset + settings.database.limit
+      }-${filter_hash}`,
       settings.server.defaultCacheTimeout
     );
-    return res.status(200).json({ message: "Listing", data: result.rows });
+
+    return res
+      .status(200)
+      .json({ message: "roommate Listing", data: result.rows });
   } catch (error) {
     console.error("Error executing query:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -210,7 +225,7 @@ router.post("/create", authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "Email not verified" });
 
   let {
-    accommodation_type,
+    // accommodation_type, use 99
     listing_title,
     listing_desc = null,
     image_json,
@@ -231,6 +246,9 @@ router.post("/create", authenticateToken, async (req, res) => {
     floor_no,
     total_floors,
     areasqft,
+    roommates_needed,
+    max_roommates,
+    lease_duration,
   } = req.body;
 
   if (!accommodation_type)
@@ -242,6 +260,14 @@ router.post("/create", authenticateToken, async (req, res) => {
     return res.status(400).json({ message: "Enter a valid listing title" });
 
   // optional description
+  if (!roommates_needed)
+    return res.status(400).json({ message: "Enter a valid roommates_needed" });
+
+  if (!max_roommates)
+    return res.status(400).json({ message: "Enter a valid max_roommates" });
+
+  if (!lease_duration)
+    return res.status(400).json({ message: "Enter a valid lease_duration" });
 
   if (!uploaded_on) uploaded_on = new Date();
 
@@ -308,7 +334,7 @@ router.post("/create", authenticateToken, async (req, res) => {
       area, city, state)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning listing_id`,
       [
-        accommodation_type,
+        99,
         listing_title,
         listing_desc,
         image_json,
@@ -342,21 +368,23 @@ router.post("/create", authenticateToken, async (req, res) => {
       await pool.query(amenitiesQuery, [listing_id, amenities_list]);
     }
 
-    await pool.query(
-      "INSERT INTO listing_metadata VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+    pool.query(
+      "INSERT INTO roommate_listing_metadata VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
       [
         listing_id,
         listing_type,
-        prefered_tenants,
-        is_available,
+        roommates_needed,
+        max_roommates,
         bedrooms,
         bathrooms,
         rent,
         deposit,
         furnishing,
+        lease_duration,
         floor_no,
         total_floors,
         areasqft,
+        is_available,
       ],
       (err, result) => {
         if (err) console.error(`Error on listing_metadata_insert ${err}`);
@@ -364,11 +392,11 @@ router.post("/create", authenticateToken, async (req, res) => {
     );
 
     return res.status(201).json({
-      message: "Listing created successfully",
+      message: "Roommate listing created successfully",
       data: { listing_id: listing_result.rows[0].listing_id },
     });
   } catch (error) {
-    console.error("Error creating listing:", error);
+    console.error("Error creating roommate listing:", error);
     return res.status(500).json({ message: "Server error" });
   }
 });
@@ -376,7 +404,10 @@ router.post("/create", authenticateToken, async (req, res) => {
 router.get("/:id", async (req, res) => {
   const listing_id = req.params.id;
   try {
-    const cachedListing = await redisClient.get(`listing:${listing_id}`);
+    const cachedListing = await redisClient.hGet(
+      "listing",
+      `roommate-listing:${listing_id}`
+    );
 
     if (cachedListing) {
       await incrementViewCount(listing_id);
@@ -385,56 +416,54 @@ router.get("/:id", async (req, res) => {
 
     const result = await pool.query(
       `SELECT 
-          listing.listing_id,
-          listing.listing_title,
-          listing.listing_desc,
-          listing.images,
-          listing.uploaded_by,
-          listing.is_available,
-          listing.rented_on,
-          listing.area,
-          listing.city,
-          listing.state,
-          lm.listing_type,
-          lm.prefered_tenants,
-          lm.is_available,
-          lm.bedrooms,
-          lm.bathrooms,
-          lm.rent,
-          lm.deposit,
-          lm.furnishing,
-          lm.floor,
-          lm.total_floors,
-          lm.areasqft,
-          ARRAY_AGG(a.amenity_name) AS amenities
-      FROM
-          listing
-      JOIN 
-          listing_metadata lm
-      ON 
-          listing.listing_id = lm.listing_id
-      LEFT JOIN 
-          listing_amenities la
-      ON 
-          listing.listing_id = la.listing_id
-      LEFT JOIN
-          amenities a
-      ON
-          la.amenity_id = a.amenity_id 
-      WHERE listing.listing_id = $1
-      GROUP BY 
-          listing.listing_id,
-          lm.listing_type,
-          lm.prefered_tenants,
-          lm.is_available,
-          lm.bedrooms,
-          lm.bathrooms,
-          lm.rent,
-          lm.deposit,
-          lm.furnishing,
-          lm.floor,
-          lm.total_floors,
-          lm.areasqft`,
+      listing.listing_id,
+      listing.listing_title,
+      listing.listing_desc,
+      listing.images,
+      listing.uploaded_by,
+      listing.is_available,
+      listing.rented_on,
+      listing.area,
+      listing.city,
+      listing.state,
+      rlm.listing_type,
+      rlm.is_available,
+      rlm.bedrooms,
+      rlm.bathrooms,
+      rlm.rent,
+      rlm.deposit,
+      rlm.furnishing,
+      rlm.floor,
+      rlm.total_floors,
+      rlm.areasqft,
+      ARRAY_AGG(a.amenity_name) AS amenities
+    FROM
+      listing
+    JOIN 
+      roommate_listing_metadata rlm
+    ON 
+      listing.listing_id = rlm.listing_id
+    LEFT JOIN 
+      listing_amenities la
+    ON 
+      listing.listing_id = la.listing_id
+    LEFT JOIN
+      amenities a
+    ON
+      la.amenity_id = a.amenity_id 
+    WHERE listing_id = $1
+    GROUP BY 
+      listing.listing_id,
+      rlm.listing_type,
+      rlm.is_available,
+      rlm.bedrooms,
+      rlm.bathrooms,
+      rlm.rent,
+      rlm.deposit,
+      rlm.furnishing,
+      rlm.floor,
+      rlm.total_floors,
+      rlm.areasqft`,
       [listing_id]
     );
 
@@ -442,10 +471,16 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Listing not found" });
     }
 
-    await redisClient.setEx(
-      `listing:${listing_id}`,
-      settings.server.defaultCacheTimeout,
+    await redisClient.hSet(
+      "listing",
+      `roommate-listing:${listing_id}`,
       JSON.stringify(result.rows[0])
+    );
+
+    await redisClient.hExpire(
+      "listing",
+      `roommate-listing:${listing_id}`,
+      settings.server.defaultCacheTimeout
     );
 
     await incrementViewCount(listing_id);

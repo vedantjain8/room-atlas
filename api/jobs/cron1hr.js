@@ -42,38 +42,39 @@ async function feedbackCronJob() {
 
 async function updateStats() {
   const viewCount = await redisClient.hGetAll("viewCount");
-  let params = [];
+  if (viewCount && Object.keys(viewCount).length > 0) {
+    let params = [];
 
-  for (key in viewCount) {
-    const listingID = key;
-    const likeCount = await getLikeCount(listingID);
-    const viewCount = await getViewCount(listingID);
-    const shareCount = await getShareCount(listingID);
+    for (key in viewCount) {
+      const listingID = key;
+      const likeCount = await getLikeCount(listingID);
+      const viewCount = await getViewCount(listingID);
+      const shareCount = await getShareCount(listingID);
 
-    params.push([listingID, viewCount, likeCount, shareCount]);
-  }
-
-  const cases = {
-    views: [],
-    likes: [],
-    shares: [],
-    ids: [],
-  };
-
-  params.forEach(([listingID, viewCount, likeCount, shareCount]) => {
-    if (typeof viewCount === "number" && viewCount !== 0) {
-      cases.views.push(`WHEN ${listingID} THEN ${viewCount}`);
+      params.push([listingID, viewCount, likeCount, shareCount]);
     }
-    if (typeof likeCount === "number" && likeCount !== 0) {
-      cases.likes.push(`WHEN ${listingID} THEN ${likeCount}`);
-    }
-    if (typeof shareCount === "number" && shareCount !== 0) {
-      cases.shares.push(`WHEN ${listingID} THEN ${shareCount}`);
-    }
-    cases.ids.push(listingID);
-  });
 
-  const query = `
+    const cases = {
+      views: [],
+      likes: [],
+      shares: [],
+      ids: [],
+    };
+
+    params.forEach(([listingID, viewCount, likeCount, shareCount]) => {
+      if (typeof viewCount === "number" && viewCount !== 0) {
+        cases.views.push(`WHEN ${listingID} THEN ${viewCount}`);
+      }
+      if (typeof likeCount === "number" && likeCount !== 0) {
+        cases.likes.push(`WHEN ${listingID} THEN ${likeCount}`);
+      }
+      if (typeof shareCount === "number" && shareCount !== 0) {
+        cases.shares.push(`WHEN ${listingID} THEN ${shareCount}`);
+      }
+      cases.ids.push(listingID);
+    });
+
+    const query = `
     UPDATE listing_stats
     SET 
       views = CASE listing_id ${cases.views.join(" ")} ELSE views END,
@@ -82,23 +83,24 @@ async function updateStats() {
     WHERE listing_id IN (${cases.ids.join(", ")});
   `;
 
-  pool.query(query, (err, result) => {
-    if (err) {
-      console.error("Error updating stats:", err);
-      return;
-    }
-    if (result) {
-      params = [];
-      cases.views = [];
-      cases.likes = [];
-      cases.shares = [];
-      cases.ids = [];
-      console.log("Stats updated successfully");
-    }
-  });
+    pool.query(query, (err, result) => {
+      if (err) {
+        console.error("Error updating stats:", err, "with query: ", query);
+        return;
+      }
+      if (result) {
+        params = [];
+        cases.views = [];
+        cases.likes = [];
+        cases.shares = [];
+        cases.ids = [];
+        console.log("Stats updated successfully");
+      }
+    });
+  }
 }
 
-cron.schedule("* * */1 * * *", async () => {
+cron.schedule("0 * * * *", async () => {
   // run every 1 hour
   feedbackCronJob();
   updateStats();
