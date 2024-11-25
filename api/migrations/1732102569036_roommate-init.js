@@ -39,17 +39,17 @@ exports.up = (pgm) => {
     },
   });
 
-  // pgm.createTable("preference_user_link", {
-  //   id: { type: "SERIAL", primaryKey: true },
-  //   user_id: { type: "INT", notNull: true, references: "users" },
-  //   preference_id: { type: "INT", notNull: true, references: "preferences" },
-  // });
+  pgm.createTable("preference_user_link", {
+    id: { type: "SERIAL", primaryKey: true },
+    user_id: { type: "INT", notNull: true, references: "users" },
+    preference_id: { type: "INT", notNull: true, references: "preferences" },
+  });
 
-  // pgm.addConstraint(
-  //   "preference_user_link",
-  //   "unique_preference_user",
-  //   "UNIQUE (user_id, preference_id)"
-  // );
+  pgm.addConstraint(
+    "preference_user_link",
+    "unique_preference_user",
+    "UNIQUE (user_id, preference_id)"
+  );
 
   pgm.sql(`
     INSERT INTO listing (listing_title, listing_desc, images, uploaded_by, is_available, rented_on, area, city, state, accommodation_type)
@@ -79,13 +79,7 @@ exports.up = (pgm) => {
     (32, 2, true, 'listing'), -- User 2 connected to "Shared Villa"
     (33, 2, false, 'roommate_request'); -- Pending roommate request by User 2 for "Roommate Needed: Beachside Cottage"
 
-    INSERT INTO preference_user_link (user_id, preference_id)
-VALUES
-    (1, 1),
-    (1, 2),
-    (2, 3),
-    (2, 1);
-
+    
     INSERT INTO listing_amenities (listing_id, amenity_id)
 VALUES
     (29, 1),
@@ -103,7 +97,7 @@ VALUES
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
-  pgm.dropTable("preference_user_link");
   pgm.dropTable("user_listing_connection");
+  pgm.dropTable("preference_user_link");
   pgm.dropTable("roommate_listing_metadata");
 };

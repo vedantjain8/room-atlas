@@ -65,6 +65,7 @@ app.use("/user", userProfileRoutes);
 app.use("/feedback", feedbackRoutes);
 app.use("/calendar", calendarRoutes);
 app.use("/const/listing", listingStaticRoutes);
+app.use("/review", require("./routes/listing/reviewRoutes"));
 app.use(jwtRoutes);
 
 // app.use(jwtRoutes);

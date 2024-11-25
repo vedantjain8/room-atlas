@@ -20,14 +20,14 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   const offset = Number(req.query.offset) || 0;
+  const city = req.query.city;
+  const state = req.query.state;
   const bhk = req.query.bhk ? req.query.bhk.split(",").map(Number) : [];
   const rentMin = Number(req.query.rentMin) || 0;
   const rentMax = Number(req.query.rentMax) || 999999;
   const depositMin = Number(req.query.depositMin) || 0;
   const depositMax = Number(req.query.depositMax) || 999999;
-  const accommodation_type = req.query.accommodation_type
-    ? req.query.accommodation_type.split(",").map(Number)
-    : [];
+  const accommodation_type = req.query.accommodation_type;
   const bathrooms = req.query.bathrooms
     ? req.query.bathrooms.split(",").map(Number)
     : [];
@@ -63,11 +63,9 @@ router.get("/", async (req, res) => {
     filters.push(`lm.deposit BETWEEN $${idx++} AND $${idx++}`);
     values.push(depositMin, depositMax);
   }
-  if (accommodation_type.length > 0) {
-    filters.push(`listing.accommodation_type IN (${accommodation_type})`);
-    values.push(...accommodation_type);
-  } else {
-    filters.push(`listing.accommodation_type IN (0,1,2)`);
+  if (accommodation_type !== undefined) {
+    filters.push(`listing.accommodation_type = ${accommodation_type}`);
+    // values.push(...accommodation_type);
   }
   if (bathrooms.length > 0) {
     filters.push(
@@ -108,6 +106,16 @@ router.get("/", async (req, res) => {
       )
     `);
     values.push(preferences.map(Number));
+  }
+
+  if (city) {
+    filters.push(`listing.city = $${idx++}`);
+    values.push(city);
+  }
+
+  if (state) {
+    filters.push(`listing.state = $${idx++}`);
+    values.push(state);
   }
 
   const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Spinner, Card, Select, SelectItem } from "@nextui-org/react";
 import ListingCard from "@/components/ListingCard";
 import useSWRInfinite from "swr/infinite";
+import { State, City, IState } from "country-state-city";
 import {
   Button,
   Checkbox,
@@ -35,6 +36,10 @@ const ListingsPage: React.FC = () => {
   const [selectedBHK, setSelectedBHK] = useState<string[]>([]);
   const [selectedBathroom, setSelectedBathroom] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string[]>([]);
+  const [states, setStates] = useState<IState[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [selectedState, setSelectedState] = useState<string>();
+  const [selectedCity, setSelectedCity] = useState<string>();
   const [selectedTenant, setSelectedTenant] = useState<string[]>([]);
   const [selectedFurnishing, setSelectedFurnishing] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -43,6 +48,8 @@ const ListingsPage: React.FC = () => {
   const [depositRange, setDepositRange] = useState<[number, number]>([
     0, 50000,
   ]);
+  const [selectedAccommodation_type, setAccommodation_type] =
+    useState<number>(0);
 
   // Fetcher function for SWR
   const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -75,9 +82,14 @@ const ListingsPage: React.FC = () => {
       furnishing: selectedFurnishing,
       amenities: selectedAmenities,
       preferences: selectedPreferences,
+      city: selectedCity,
+      state: selectedState,
+      accommodation_type: selectedAccommodation_type,
     };
 
     const queryParams = buildQueryParams(filters);
+    console.log(queryParams);
+
     return `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/?offset=${
       pageIndex * 15
     }&${queryParams}&rentMin=${rentRange[0]}&rentMax=${
@@ -104,6 +116,7 @@ const ListingsPage: React.FC = () => {
     const data = await response.json();
     setPreferences(data.message || []);
   };
+  const acco = ["Flats", "Hostels", "PGs"];
 
   useEffect(() => {
     if (amenities.length === 0 || !amenities) fetchAmenities();
@@ -118,6 +131,25 @@ const ListingsPage: React.FC = () => {
     setSize((prevSize) => prevSize + 1);
   }, [setSize]);
 
+  useEffect(() => {
+    const indianStates = State.getStatesOfCountry("IN");
+    setStates(indianStates);
+  }, []);
+
+  useEffect(() => {
+    if (selectedState) {
+      // Fetch cities of the selected state
+      const citiesOfSelectedState = City.getCitiesOfState("IN", selectedState);
+      // Extract city names from the fetched cities
+      const cityNames = citiesOfSelectedState.map((city: any) => city.name);
+      // Update cities state with the new list of city names
+      setCities(cityNames);
+    } else {
+      // Clear cities if no state is selected
+      setCities([]);
+    }
+  }, [selectedState]);
+
   if (error) return <div>Failed to load</div>;
 
   return (
@@ -125,7 +157,7 @@ const ListingsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 w-full">
         {/* Sidebar */}
         <div className="md:w-1/4 lg:w-3/12 bg-white p-6">
-          <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="flex flex-col gap-2 bg-white p-4 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold">Filter</h2>
               <Button
@@ -140,12 +172,27 @@ const ListingsPage: React.FC = () => {
                   setSelectedPreferences([]);
                   setRentRange([10000, 30000]);
                   setDepositRange([10000, 30000]);
+                  setAccommodation_type(0);
                 }}
               >
                 <RefreshCw />
                 Reset
               </Button>
             </div>
+            <Select
+              label="Accommodation type"
+              value={selectedAccommodation_type?.toString()}
+              onChange={(value) => {
+                console.log;
+                setAccommodation_type(Number(value.target.value));
+              }}
+            >
+              {acco.map((a: string, index: number) => (
+                <SelectItem key={index} value={index.toString()}>
+                  {a}
+                </SelectItem>
+              ))}
+            </Select>
 
             <div className="mb-4">
               <Slider
@@ -175,9 +222,9 @@ const ListingsPage: React.FC = () => {
               <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
                 BHK
               </h3>
-              <div className="grid grid-cols-2 items-center gap-y-2">
+              <div className="flex items-center gap-y-2">
                 <CheckboxGroup
-                  orientation="horizontal"
+                  orientation="vertical"
                   value={selectedBHK}
                   onValueChange={setSelectedBHK}
                 >
@@ -188,15 +235,55 @@ const ListingsPage: React.FC = () => {
                 </CheckboxGroup>
               </div>
             </div>
+            <select
+              id="listing_state"
+              name="listing_state"
+              value={selectedState}
+              
+              onChange={(value) => {
+                setSelectedState(value.target.value);
+              }}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option className="opacity-55">
+                Select State
+              </option>
+
+              {states.map((state: { name: string; isoCode: string }) => (
+                <option key={state.name} value={state.isoCode}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+            <select
+              id="listing_city"
+              name="listing_city"
+              value={selectedCity}
+              onChange={(value) => {
+                setSelectedCity(value.target.value);
+              }}
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+            >
+              <option className="opacity-55">
+                Select City
+              </option>
+
+              {cities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
             <div className="mb-4">
               <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
                 Bathrooms
               </h3>
-              <div className="grid grid-cols-2 items-center gap-y-2">
+              <div className="flex items-center gap-y-2">
                 <CheckboxGroup
                   orientation="horizontal"
                   value={selectedBathroom}
                   onValueChange={setSelectedBathroom}
+                  className="grid grid-cols-3"
                 >
                   <Checkbox value="1">1</Checkbox>
                   <Checkbox value="2">2</Checkbox>
@@ -287,6 +374,7 @@ const ListingsPage: React.FC = () => {
                   orientation="vertical"
                   value={selectedPreferences}
                   onValueChange={setSelectedPreferences}
+                  className="grid grid-cols-2 gap-2"
                 >
                   {preferences.map(
                     (preference: {
@@ -310,7 +398,7 @@ const ListingsPage: React.FC = () => {
 
         <div className="lg:w-9/12 pl-4">
           <div className="sticky top-20 w-10/12 md:w-8/12 flex ml-8 p-3 bg-white md:fixed rounded-lg shadow-lg items-center h-14 z-30">
-          {/* TODO: search pending */}
+            {/* TODO: search pending */}
             <Input
               type="search"
               placeholder="type to search..."
