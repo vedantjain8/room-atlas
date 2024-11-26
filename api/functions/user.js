@@ -2,12 +2,15 @@ const pool = require("../config/db");
 const redisClient = require("../config/dbredis");
 const settings = require("../config/settings");
 
-async function getUserData(user_id) {
+async function getUserData(user_idArgs, reload = false) {
+  // user_id is string
+  const user_id = user_idArgs.toString();
   try {
-    var value = await redisClient.get(`userData:${user_id}`);
-
-    if (value) {
-      return JSON.parse(value);
+    if (reload == false) {
+      const value = await redisClient.hGet("userData", user_id);
+      if (value) {
+        return JSON.parse(value);
+      }
     }
     const userResult = await pool.query(
       `SELECT 
@@ -47,8 +50,14 @@ async function getUserData(user_id) {
 
     var userData = userResult.rows[0];
 
-    await redisClient.set(`userData:${user_id}`, JSON.stringify(userData));
-    await redisClient.expire(`userData:${user_id}`, settings.server.defaultCacheTimeout);
+    await redisClient.hSet("userData", user_id, JSON.stringify(userData));
+    await redisClient.hExpire(
+      "userData",
+      user_id,
+      settings.server.defaultCacheTimeout
+    );
+    // await redisClient.set(`userData:${user_id}`, JSON.stringify(userData));
+    // await redisClient.expire(`userData:${user_id}`, settings.server.defaultCacheTimeout);
 
     return userData;
   } catch (err) {

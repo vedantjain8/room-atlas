@@ -122,30 +122,37 @@ const CalendarPage: React.FC<CalendarPageProps> = ({
               <Button
                 onClick={async () => {
                   if (!senderid || !receiverid) return;
-                  const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_HOSTNAME}/calendar/new`,
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        date: dateState,
-                        senderid,
-                        receiverid,
-                        message: (
-                          document.getElementById(
-                            "Description"
-                          ) as HTMLInputElement
-                        ).value,
-                      }),
-                    }
-                  );
+                  try {
+                    const response = await fetch(
+                      `${process.env.NEXT_PUBLIC_HOSTNAME}/calendar/new`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          date: dateState,
+                          senderid,
+                          receiverid,
+                          message: (
+                            document.getElementById(
+                              "Description"
+                            ) as HTMLInputElement
+                          ).value,
+                        }),
+                      }
+                    );
 
-                  const data = await response.json();
-                  socket.emit("chatMessage", {
-                    sender: senderid,
-                    receiver: receiverid,
-                    message: data.url,
-                  });
+                    const data = await response.json();
+                    socket.emit("chatMessage", {
+                      sender: senderid,
+                      receiver: receiverid,
+                      message: data.url,
+                    });
+                  } catch (error) {
+                    console.error(
+                      "Error fetching or processing event data:",
+                      error
+                    );
+                  }
                 }}
               >
                 Add to google calendar

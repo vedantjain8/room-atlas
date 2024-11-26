@@ -12,6 +12,8 @@ const {
 
 const router = express.Router();
 
+router.use("/", require("./userProfileRoutes"));
+
 const allowedCharactersRegex = /^[a-zA-Z0-9_]*$/;
 
 async function redisCheckUsername(username) {

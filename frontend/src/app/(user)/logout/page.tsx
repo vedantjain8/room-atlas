@@ -2,14 +2,16 @@
 
 import { useEffect } from "react";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { redirect } from "next/navigation";
 
 export default function Logout() {
   const { logout } = useAuth();
 
   useEffect(() => {
     logout();
-    // redirect to login page
-    window.location.href = "/login";  
+    setTimeout(() => {
+      redirect("/login");
+    }, 5000);
   }, [logout]);
 
   return (

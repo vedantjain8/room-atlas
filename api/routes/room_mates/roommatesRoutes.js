@@ -26,14 +26,13 @@ router.get("/", async (req, res) => {
   const max_roommates = req.query.max_roommates
     ? req.query.max_roommates.split(",")
     : [];
+  const city = req.query.city;
+  const state = req.query.state;
   const bhk = req.query.bhk ? req.query.bhk.split(",").map(Number) : [];
   const rentMin = Number(req.query.rentMin) || 0;
   const rentMax = Number(req.query.rentMax) || 999999;
   const depositMin = Number(req.query.depositMin) || 0;
   const depositMax = Number(req.query.depositMax) || 999999;
-  const accommodation_type = req.query.accommodation_type
-    ? req.query.accommodation_type.split(",").map(Number)
-    : [];
   const bathrooms = req.query.bathrooms
     ? req.query.bathrooms.split(",").map(Number)
     : [];
@@ -112,6 +111,16 @@ router.get("/", async (req, res) => {
       `pl.preference_id IN (${preferences.map(() => `$${idx++}`).join(",")})`
     );
     values.push(preferences.map(Number));
+  }
+
+  if (city) {
+    filters.push(`listing.city = $${idx++}`);
+    values.push(city);
+  }
+
+  if (state) {
+    filters.push(`listing.state = $${idx++}`);
+    values.push(state);
   }
 
   filters.push(`listing.accommodation_type IN (99)`);
@@ -250,11 +259,6 @@ router.post("/create", authenticateToken, async (req, res) => {
     max_roommates,
     lease_duration,
   } = req.body;
-
-  if (!accommodation_type)
-    return res
-      .status(400)
-      .json({ message: "Enter a valid accommodation type" });
 
   if (!listing_title)
     return res.status(400).json({ message: "Enter a valid listing title" });
@@ -451,7 +455,7 @@ router.get("/:id", async (req, res) => {
       amenities a
     ON
       la.amenity_id = a.amenity_id 
-    WHERE listing_id = $1
+    WHERE listing.listing_id = $1
     GROUP BY 
       listing.listing_id,
       rlm.listing_type,
@@ -489,6 +493,37 @@ router.get("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error fetching listing:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/:id/roommatesdetail", async (req, res) => {
+  try {
+    const roomatesDetailsData = await pool.query(
+      `SELECT 
+        user_id 
+      FROM 
+        user_listing_connection ulc 
+      WHERE 
+        listing_id = $1 
+      AND 
+        connection_type = 'listing'
+      AND
+        is_approved = true`,
+      [req.params.id]
+    );
+
+    // Map user_id from rows to a promise that resolves user data
+    const userDataPromises = roomatesDetailsData.rows.map((element) =>
+      getUserData(element.user_id)
+    );
+
+    // Await all promises to resolve
+    const data = await Promise.all(userDataPromises);
+
+    return res.status(200).json({ message: data });
+  } catch (error) {
+    console.error("Error fetching roommate details:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 

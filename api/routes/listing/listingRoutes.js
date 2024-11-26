@@ -19,6 +19,7 @@ const {
 const router = express.Router();
 
 router.get("/", async (req, res) => {
+  const searchQuery = req.query.search;
   const offset = Number(req.query.offset) || 0;
   const city = req.query.city;
   const state = req.query.state;
@@ -50,6 +51,11 @@ router.get("/", async (req, res) => {
   let idx = 2;
 
   // Add filters dynamically
+  if (searchQuery) {
+    filters.push(`LOWER(listing.listing_title) ILIKE LOWER($${idx++})`);
+    values.push(`${searchQuery}%`);
+  }
+
   if (bhk.length > 0) {
     filters.push(`lm.bedrooms IN (${bhk.map(() => `$${idx++}`).join(",")})`);
     values.push(...bhk);
@@ -122,7 +128,7 @@ router.get("/", async (req, res) => {
 
   const filter_hash = require("crypto")
     .createHash("md5")
-    .update(whereClause)
+    .update(whereClause + values.join(""))
     .digest("hex");
 
   // Check if the data is cached in Redis

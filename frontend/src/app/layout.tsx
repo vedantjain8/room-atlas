@@ -34,7 +34,9 @@ export default function RootLayout({
         <NextUIProvider>
           <AuthProvider>
             <Navbar />
+            <div className="min-h-screen">
             {children}
+            </div>
             <Footer />
           </AuthProvider>
         </NextUIProvider>

@@ -15,6 +15,7 @@ import {
 } from "@nextui-org/react";
 
 import { ArrowRight, CircleAlert, Send } from "lucide-react";
+import { redirect } from "next/navigation";
 
 export default function RegisterForm() {
   const [page, setPage] = useState(1); // set this to 2 to see page 2
@@ -84,9 +85,8 @@ export default function RegisterForm() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
-      } 
+      }
       const data = await response.json();
-      console.log(data);
       // TODO: add validation for the data received
       setActive(true);
     } catch (error: any) {
@@ -163,7 +163,7 @@ export default function RegisterForm() {
         if (response.status === 200) {
           // TODO: add a provider for toast messages
           // pass the success message to the toast provider
-          window.location.href = "/login";
+          redirect("/login");
         } else {
           alert(data.message || "Error registering user");
         }
@@ -267,14 +267,14 @@ export default function RegisterForm() {
               />
               {errors.email && (
                 <div className="flex items-center mt-1 ml-1">
-                  <CircleAlert/>
+                  <CircleAlert />
                   <p className="text-red-500 text-sm">{errors.email}</p>
                 </div>
               )}
 
               {errors.emailVerified && (
                 <div className="flex items-center mt-1 ml-1">
-                  <CircleAlert/>
+                  <CircleAlert />
                   <p className="text-red-500 text-sm">{errors.emailVerified}</p>
                 </div>
               )}
@@ -345,25 +345,24 @@ export default function RegisterForm() {
             )}
           </LabelInputContainer>
           <div className="flex items-center justify-between mb-4">
-          <LabelInputContainer className="w-2/12">
-          <p>+91</p>
-          </LabelInputContainer>
-          <LabelInputContainer className="w-11/12">
-            
-            <Input
-              id="phone"
-              placeholder="Phone Number"
-              type="tel"
-              name="phone"
-              onChange={handleChange}
-            />
-            {errors.phone && (
-              <div className="flex items-center mt-1 ml-1">
-                <CircleAlert />
-                <p className="text-red-500 text-sm">{errors.phone}</p>
-              </div>
-            )}
-          </LabelInputContainer>
+            <LabelInputContainer className="w-2/12">
+              <p>+91</p>
+            </LabelInputContainer>
+            <LabelInputContainer className="w-11/12">
+              <Input
+                id="phone"
+                placeholder="Phone Number"
+                type="tel"
+                name="phone"
+                onChange={handleChange}
+              />
+              {errors.phone && (
+                <div className="flex items-center mt-1 ml-1">
+                  <CircleAlert />
+                  <p className="text-red-500 text-sm">{errors.phone}</p>
+                </div>
+              )}
+            </LabelInputContainer>
           </div>
           <LabelInputContainer className="mb-4">
             <select

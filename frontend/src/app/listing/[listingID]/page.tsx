@@ -6,6 +6,7 @@ import { Eye, Heart, Link, Pen, PencilLine, Send, Share } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { redirect } from "next/navigation";
 // import imageflat from 'room-atlas/frontend/src/app/images/flat_image.png';
 
 function ListingDetails({ params }: { params: { listingID: string } }) {
@@ -15,7 +16,6 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   const [listingData, setListingData] = useState<any>(null);
   const [statsData, setStatsData] = useState<any>(null);
   const [reviewData, setReviewData] = useState<any>(null);
-  const [roommateData, setRoommateData] = useState<any>();
   const [postReviewData, setPostReviewData] = useState<string>();
   const listingID = params.listingID;
 
@@ -24,7 +24,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
     text: "Get the best homes ever",
     url: "http://localhost:3000",
   };
-  
+
   const shareHandler = async () => {
     try {
       await navigator.share(shareData);
@@ -33,7 +33,6 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
       console.error("Share failed:", err);
     }
   };
-  
 
   async function fetchData(id: string) {
     try {
@@ -48,17 +47,6 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
       console.error("Error fetching listing data:", error);
     } finally {
       setIsLoading(false);
-    }
-  }
-
-  async function fetchRoommates() {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_HOSTNAME}/roommate/${listingID}`);
-      if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
-      const data = await res.json();
-      setRoommateData(data.message);
-    } catch (error) {
-      console.error("Error fetching roommates data:", error);
     }
   }
 
@@ -127,7 +115,6 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   useEffect(() => {
     fetchStats();
     fetchReview();
-    fetchRoommates();
   }, []);
 
   if (isLoading) {
@@ -188,10 +175,9 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
               <span>{statsData.likes || 0}</span>
             </div>
             <Link onClick={shareHandler}>
-            <div className="flex gap-2 items-center">
-              <Share className="text-blue-500" />
-              <span>Share</span>
-            </div>
+              <div className="flex gap-2 items-center">
+                <Share className="text-blue-500" />
+              </div>
             </Link>
           </div>
         </div>
@@ -245,7 +231,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           <Button
             className="bg-gradient-to-br from-sky-500 to-blue-700 text-white text-xs md:text-base"
             onClick={() => {
-              window.location.href = `/chat?receiverId=${listingData.uploaded_by}`;
+              redirect(`/chat?receiverId=${listingData.uploaded_by}`);
             }}
           >
             <Send strokeWidth={1.5} />
@@ -268,10 +254,10 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
             <span className="text-sm md:text-base">{statsData.likes || 0}</span>
           </div>
           <Link onClick={shareHandler}>
-          <div className="flex gap-2 items-center">
-            <Share className="text-blue-500" />
-            <span className="text-sm md:text-base">Share</span>
-          </div>
+            <div className="flex gap-2 items-center">
+              <Share className="text-blue-500" />
+              <span className="text-sm md:text-base">Share</span>
+            </div>
           </Link>
         </div>
       </div>
@@ -285,65 +271,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           <h2>{listingData.listing_desc}</h2>
         </div>
       </div>
-      <div className="flex flex-col gap-2 border-1 border-sky-600 rounded p-3">
-        <h1>Roommates</h1>
-        <h2>Roommates needed: {roommateData.roommates_needed.map(())}</h2>
 
-          <div className="grid grid-cols-2 gap-y-4">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <Avatar />
-                <h2>Fernandez</h2>
-              </div>
-              <div className="flex gap-2">
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Smoker
-                </div>
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Non-Alcoholic
-                </div>
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Vegetarian
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <Avatar />
-                <h2>Saka</h2>
-              </div>
-              <div className="flex gap-2">
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Smoker
-                </div>
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Non-Alcoholic
-                </div>
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Vegetarian
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <Avatar />
-                <h2>Ronaldinho</h2>
-              </div>
-              <div className="flex gap-2">
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Smoker
-                </div>
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Non-Alcoholic
-                </div>
-                <div className="bg-sky-600 text-white rounded-lg p-2">
-                  Vegetarian
-                </div>
-              </div>
-            </div>
-          </div>
-
-      </div>
       <div className="flex flex-col">
         <div className="flex flex-col w-full gap-4">
           <h2 className="text-xl font-semibold">Review</h2>
@@ -370,7 +298,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
               <Avatar />
             </div>
             <div className="flex flex-col gap-4 items-start justify-center">
-              <h2 className="pt-1 font-semibold">adityan{review.user_id}</h2>
+              <h2 className="pt-1 font-semibold">{review.user_id}</h2>
               <p className="pl-2">{review.review}</p>
             </div>
           </div>

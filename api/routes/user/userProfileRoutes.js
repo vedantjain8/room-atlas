@@ -7,6 +7,17 @@ const getUserData = require("../../functions/user");
 
 const router = express.Router();
 
+router.get("/profile", authenticateToken, async function (req, res) {
+  try {
+    const user_id = req.user.userID;
+    const userProfileCache = await getUserData(user_id);
+    return res.status(200).json({ message: userProfileCache });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.get("/:userID", async function (req, res) {
   const user_id = req.params.userID;
 
@@ -23,7 +34,7 @@ router.get("/:userID", async function (req, res) {
   }
 });
 
-router.get("/profile/:username", async function (req, res) {
+router.get("/profile/:username", async (req, res) => {
   const username = req.params.username;
 
   if (!username) {
@@ -47,7 +58,6 @@ router.get("/profile/:username", async function (req, res) {
     user_id = userResult.rows[0].user_id;
     const userProfile = await getUserData(user_id);
     await redisClient.hSet(`userLookup`, username, user_id);
-    await redisClient.expire(`userLookup`, settings.server.defaultCacheTimeout);
 
     return res.status(200).json({ message: userProfile });
   } catch (error) {

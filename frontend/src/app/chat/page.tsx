@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { useAuth } from "@/app/contexts/AuthContext";
 import CalendarPage from "@/components/calendar";
 import { Input } from "@nextui-org/react";
+import Link from "next/link";
 
 const socket = io(`${process.env.NEXT_PUBLIC_HOSTNAME}`, {
   autoConnect: false, // Prevent auto-connection before user authentication
@@ -107,11 +108,12 @@ export default function ChatPage() {
   const sendMessage = () => {
     if (!message.trim() || !receiverId) return;
 
+
     const newMessage = {
       message_id: Date.now(),
       sender_id: user?.user_id,
       receiver_id: receiverId,
-      message,
+      message: message,
       created_at: new Date().toISOString(),
       username: user?.username,
     };
@@ -121,7 +123,7 @@ export default function ChatPage() {
     socket.emit("chatMessage", {
       sender: user?.user_id,
       receiver: receiverId,
-      message,
+      message: message,
     });
 
     setMessage("");
@@ -214,7 +216,7 @@ export default function ChatPage() {
                 </p>
                 <p className="mt-1 text-gray-700">
                   {msg.message.startsWith("http") ? (
-                    <a href={msg.message}>{msg.message}</a>
+                    <Link href={msg.message}>{msg.message}</Link>
                   ) : (
                     msg.message
                   )}
@@ -237,7 +239,7 @@ export default function ChatPage() {
               className="flex-1 px-4 py-2 rounded-lg focus:ring-2 focus:ring-sky-500"
             />
             <button
-              onClick={sendMessage}
+              onClick={() => sendMessage()}
               className="ml-3 px-6 rounded-xl bg-sky-600 text-white pt-2 pb-2 hover:bg-sky-700"
             >
               Send

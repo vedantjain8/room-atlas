@@ -28,37 +28,42 @@ router.post("/new", async (req, res) => {
   
   Location: https://www.google.com/maps/search/21.15150934008922,+72.79589313405597`;
 
-  const senderUsername = await getUserData(senderid).username;
-  const receiverUsername = await getUserData(receiverid).username;
+  try {
+    const senderUsername = await getUserData(senderid).username;
+    const receiverUsername = await getUserData(receiverid).username;
 
-  const eventTitle = `Meeting with ${senderUsername} and ${receiverUsername} for property viewing`;
+    const eventTitle = `Meeting with ${senderUsername} and ${receiverUsername} for property viewing`;
 
-  const eventStartDate = convertToUTC(date);
+    const eventStartDate = convertToUTC(date);
 
-  const endDate = new Date(
-    date.year,
-    date.month,
-    date.day,
-    date.hour,
-    date.minute
-  );
-  endDate.setHours(endDate.getHours() + 1);
-  const eventEndDate = convertToUTC({
-    year: endDate.getFullYear(),
-    month: endDate.getMonth(),
-    day: endDate.getDate(),
-    hour: endDate.getHours(),
-    minute: endDate.getMinutes(),
-  });
+    const endDate = new Date(
+      date.year,
+      date.month,
+      date.day,
+      date.hour,
+      date.minute
+    );
+    endDate.setHours(endDate.getHours() + 1);
+    const eventEndDate = convertToUTC({
+      year: endDate.getFullYear(),
+      month: endDate.getMonth(),
+      day: endDate.getDate(),
+      hour: endDate.getHours(),
+      minute: endDate.getMinutes(),
+    });
 
-  await pool.query(
-    "INSERT INTO calendar (user1_id, user2_id, event_start_date) VALUES ($1, $2, $3)",
-    [senderid, receiverid, eventStartDate]
-  );
+    await pool.query(
+      "INSERT INTO calendar (user1_id, user2_id, event_start_date) VALUES ($1, $2, $3)",
+      [senderid, receiverid, eventStartDate]
+    );
 
-  url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDescription}&location=&dates=${eventStartDate}%2F${eventEndDate}`;
+    url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDescription}&location=&dates=${eventStartDate}%2F${eventEndDate}`;
 
-  res.status(200).json({ message: "Event created", url: url });
+    return res.status(200).json({ message: "Event created", url: url });
+  } catch (err) {
+    console.error("Error creating event: ", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 module.exports = router;

@@ -6,13 +6,14 @@ const http = require("http");
 const initSocket = require("./functions/socket");
 const bodyParser = require("body-parser");
 const pool = require("./config/db");
+const fs = require("fs");
+const path = require("path");
 
 const userRoutes = require("./routes/user/userRoutes");
 const listingRoutes = require("./routes/listing/listingRoutes");
 const listingStaticRoutes = require("./routes/listing/listingStaticRoutes");
 const chattingRoutes = require("./routes/chat/chattingRoutes");
 const verificationRoutes = require("./routes/user/verificationRoutes");
-const userProfileRoutes = require("./routes/user/userProfileRoutes");
 const feedbackRoutes = require("./routes/pages/feedbackRoutes");
 const calendarRoutes = require("./routes/user/calendarRoutes");
 const jwtRoutes = require("./routes/jwtRoutes");
@@ -21,6 +22,21 @@ const reviewRoutes = require("./routes/listing/reviewRoutes");
 
 const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
 const settings = require("./config/settings");
+
+const createDirectory = (directoryPath) => {
+  fs.access(directoryPath, (error) => {
+    if (error) {
+      fs.mkdirSync(directoryPath, { recursive: true });
+      console.log(`Directory created: ${directoryPath}`);
+    } else {
+      console.log(`Directory already exists: ${directoryPath}`);
+    }
+  });
+};
+
+const publicFolder = path.join(__dirname, "public");
+createDirectory(path.join(publicFolder, "assets", "upload", "images"));
+createDirectory(path.join(publicFolder, "assets", "upload", "profiles"));
 
 // cron jobs
 require("./jobs/cron24hr");
@@ -61,7 +77,6 @@ app.use("/roommate", roommatesRoutes);
 app.use("/review", reviewRoutes);
 app.use("/chat", chattingRoutes);
 app.use("/verify", verificationRoutes);
-app.use("/user", userProfileRoutes);
 app.use("/feedback", feedbackRoutes);
 app.use("/calendar", calendarRoutes);
 app.use("/const/listing", listingStaticRoutes);

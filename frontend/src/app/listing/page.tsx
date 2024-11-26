@@ -14,23 +14,8 @@ import {
 } from "@nextui-org/react";
 import { RefreshCw, Search } from "lucide-react";
 
-// interface ListingData {
-//   listing_id: number;
-//   listing_title: string;
-//   area: string;
-//   images: string[];
-//   rent: number;
-//   deposit: number;
-//   areasqft: number;
-//   listing_type: number;
-//   prefered_tenants: number;
-//   furnishing: number;
-//   is_available: boolean;
-//   amenities: string[];
-//   preferences: string[];
-// }
-
 const ListingsPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState<string>();
   const [amenities, setAmenities] = useState([]);
   const [preferences, setPreferences] = useState([]);
   const [selectedBHK, setSelectedBHK] = useState<string[]>([]);
@@ -51,17 +36,25 @@ const ListingsPage: React.FC = () => {
   const [selectedAccommodation_type, setAccommodation_type] =
     useState<number>(0);
 
-  // Fetcher function for SWR
-  const fetcher = (url: string) => fetch(url).then((res) => res.json());
+  const fetcher = (url: string) =>
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch data");
+        return res.json();
+      })
+      .catch((err) => {
+        console.error(err);
+        return { data: [] }; // Fallback for safe rendering
+      });
 
   const buildQueryParams = (filters: Record<string, any>): string => {
     const params = new URLSearchParams();
 
     Object.entries(filters).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
-      if (Array.isArray(value) && value.length > 1) {
+      if (Array.isArray(value) && value.length > 0) {
         params.append(key, value.join(","));
-      } else if (value !== undefined && value !== null && value !== "") {
+      } else if (value) {
         params.append(key, value);
       }
     });
@@ -70,10 +63,8 @@ const ListingsPage: React.FC = () => {
   };
 
   const getKey = (pageIndex: number, previousPageData: any) => {
-    // If there is no more data, return null to stop fetching
-    if (previousPageData && !previousPageData.data.length) return null;
+    if (previousPageData && previousPageData.data?.length === 0) return null;
 
-    // Construct query parameters for paginated fetching
     const filters = {
       bhk: selectedBHK,
       bathrooms: selectedBathroom,
@@ -82,6 +73,7 @@ const ListingsPage: React.FC = () => {
       furnishing: selectedFurnishing,
       amenities: selectedAmenities,
       preferences: selectedPreferences,
+      search: searchQuery,
       city: selectedCity,
       state: selectedState,
       accommodation_type: selectedAccommodation_type,
@@ -100,32 +92,37 @@ const ListingsPage: React.FC = () => {
   const { data, error, setSize, isLoading } = useSWRInfinite(getKey, fetcher);
 
   const fetchAmenities = async () => {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/amenities`,
-      { method: "GET" }
-    );
-    const data = await response.json();
-    setAmenities(data.message || []);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/amenities`
+      );
+      const data = await response.json();
+      setAmenities(data.message || []);
+    } catch (error) {
+      console.error("Failed to fetch amenities:", error);
+    }
   };
 
   const fetchPreferences = async () => {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/preferences`,
-      { method: "GET" }
-    );
-    const data = await response.json();
-    setPreferences(data.message || []);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/preferences`
+      );
+      const data = await response.json();
+      setPreferences(data.message || []);
+    } catch (error) {
+      console.error("Failed to fetch preferences:", error);
+    }
   };
   const acco = ["Flats", "Hostels", "PGs"];
 
   useEffect(() => {
-    if (amenities.length === 0 || !amenities) fetchAmenities();
-    if (preferences.length === 0 || !preferences) fetchPreferences();
+    if (!amenities.length) fetchAmenities();
+    if (!preferences.length) fetchPreferences();
   }, []);
 
-  // Combine all fetched listings
-  const listingData = data?.flatMap((page) => page.data) ?? [];
-  const hasMoreData = data?.[data.length - 1]?.data.length === 15;
+  const listingData = data?.flatMap((page) => page?.data || []) ?? [];
+  const hasMoreData = data?.[data.length - 1]?.data?.length === 15;
 
   const loadMore = useCallback(() => {
     setSize((prevSize) => prevSize + 1);
@@ -150,7 +147,27 @@ const ListingsPage: React.FC = () => {
     }
   }, [selectedState]);
 
-  if (error) return <div>Failed to load</div>;
+  useEffect(() => {
+    const indianStates = State.getStatesOfCountry("IN");
+    setStates(indianStates);
+  }, []);
+
+  useEffect(() => {
+    if (selectedState) {
+      // Fetch cities of the selected state
+      const citiesOfSelectedState = City.getCitiesOfState("IN", selectedState);
+      // Extract city names from the fetched cities
+      const cityNames = citiesOfSelectedState.map((city: any) => city.name);
+      // Update cities state with the new list of city names
+      setCities(cityNames);
+    } else {
+      // Clear cities if no state is selected
+      setCities([]);
+    }
+  }, [selectedState]);
+
+  if (error)
+    return <div className="text-red-500">Failed to load listings.</div>;
 
   return (
     <>
@@ -159,7 +176,7 @@ const ListingsPage: React.FC = () => {
         <div className="md:w-1/4 lg:w-3/12 bg-white p-6">
           <div className="flex flex-col gap-2 bg-white p-4 rounded-lg shadow-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Filter</h2>
+              <h2 className="text-lg font-bold">Filters</h2>
               <Button
                 className="text-sm font-medium bg-sky-500 text-blue-100 hover:bg-sky-400 rounded-none"
                 onClick={() => {
@@ -170,8 +187,8 @@ const ListingsPage: React.FC = () => {
                   setSelectedFurnishing([]);
                   setSelectedAmenities([]);
                   setSelectedPreferences([]);
-                  setRentRange([10000, 30000]);
-                  setDepositRange([10000, 30000]);
+                  setRentRange([0, 50000]);
+                  setDepositRange([0, 50000]);
                   setAccommodation_type(0);
                 }}
               >
@@ -194,17 +211,16 @@ const ListingsPage: React.FC = () => {
               ))}
             </Select>
 
-            <div className="mb-4">
-              <Slider
-                label="Rent Range"
-                step={50}
-                minValue={0}
-                maxValue={50000}
-                defaultValue={rentRange}
-                onChange={(value) => setRentRange(value as [number, number])}
-                className="max-w-md"
-              />
-            </div>
+            {/* Slider Components */}
+            <Slider
+              label="Rent Range"
+              step={50}
+              minValue={0}
+              maxValue={50000}
+              defaultValue={rentRange}
+              onChange={(value) => setRentRange(value as [number, number])}
+              className="max-w-md"
+            />
 
             <div>
               <Slider
@@ -239,15 +255,12 @@ const ListingsPage: React.FC = () => {
               id="listing_state"
               name="listing_state"
               value={selectedState}
-              
               onChange={(value) => {
                 setSelectedState(value.target.value);
               }}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option className="opacity-55">
-                Select State
-              </option>
+              <option className="opacity-55">Select State</option>
 
               {states.map((state: { name: string; isoCode: string }) => (
                 <option key={state.name} value={state.isoCode}>
@@ -264,9 +277,7 @@ const ListingsPage: React.FC = () => {
               }}
               className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
             >
-              <option className="opacity-55">
-                Select City
-              </option>
+              <option className="opacity-55">Select City</option>
 
               {cities.map((city) => (
                 <option key={city} value={city}>
@@ -396,81 +407,77 @@ const ListingsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Listings */}
         <div className="lg:w-9/12 pl-4">
-          <div className="sticky top-20 w-10/12 md:w-8/12 flex ml-8 p-3 bg-white md:fixed rounded-lg shadow-lg items-center h-14 z-30">
-            {/* TODO: search pending */}
+          <div className="sticky top-20 p-3 bg-white rounded-lg shadow-lg items-center h-14 z-30">
             <Input
               type="search"
-              placeholder="type to search..."
+              placeholder="Type to search..."
               startContent={<Search />}
-              className="lg:w-full"
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="mt-14">
-            {/* Main Content - Listings Grid */}
-            <main className="flex-1 p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {/* Skeleton Loading */}
-                {isLoading && listingData.length === 0
-                  ? Array.from({ length: 15 }).map((_, index) => (
-                      <Card
-                        key={index}
-                        className="w-full space-y-5 p-4"
-                        radius="lg"
-                      >
-                        <Skeleton className="rounded-lg">
-                          <div className="h-48 rounded-lg bg-default-300"></div>
+          <main className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {isLoading && listingData.length === 0
+                ? Array.from({ length: 15 }).map((_, index) => (
+                    <Card
+                      key={index}
+                      className="w-full space-y-5 p-4"
+                      radius="lg"
+                    >
+                      <Skeleton className="rounded-lg">
+                        <div className="h-48 rounded-lg bg-default-300"></div>
+                      </Skeleton>
+                      <div className="space-y-3">
+                        <Skeleton className="w-3/5 rounded-lg">
+                          <div className="h-4 w-3/5 rounded-lg bg-default-200"></div>
                         </Skeleton>
-                        <div className="space-y-3">
-                          <Skeleton className="w-3/5 rounded-lg">
-                            <div className="h-4 w-3/5 rounded-lg bg-default-200"></div>
-                          </Skeleton>
-                          <Skeleton className="w-4/5 rounded-lg">
-                            <div className="h-4 w-4/5 rounded-lg bg-default-200"></div>
-                          </Skeleton>
-                          <Skeleton className="w-2/5 rounded-lg">
-                            <div className="h-4 w-2/5 rounded-lg bg-default-300"></div>
-                          </Skeleton>
-                        </div>
-                      </Card>
-                    ))
-                  : listingData.map((listing) => (
-                      <ListingCard
-                        key={listing.listing_id}
-                        id={listing.listing_id}
-                        title={listing.listing_title}
-                        area={listing.area}
-                        image={listing.images || ["/path/to/default-image.png"]}
-                        rent={listing.rent}
-                        deposit={listing.deposit}
-                        areasqft={listing.areasqft}
-                        listingType={listing.listing_type}
-                        preferedTenants={listing.prefered_tenants}
-                        furnishing={listing.furnishing}
-                        available={listing.is_available}
-                        amenities={listing.amenities}
-                      />
-                    ))}
+                        <Skeleton className="w-4/5 rounded-lg">
+                          <div className="h-4 w-4/5 rounded-lg bg-default-200"></div>
+                        </Skeleton>
+                        <Skeleton className="w-2/5 rounded-lg">
+                          <div className="h-4 w-2/5 rounded-lg bg-default-300"></div>
+                        </Skeleton>
+                      </div>
+                    </Card>
+                  ))
+                : listingData.map((listing) => (
+                    <ListingCard
+                      key={listing.listing_id}
+                      id={listing.listing_id}
+                      title={listing.listing_title}
+                      area={listing.area}
+                      image={listing.images || ["/path/to/default-image.png"]}
+                      rent={listing.rent}
+                      deposit={listing.deposit}
+                      areasqft={listing.areasqft}
+                      listingType={listing.listing_type}
+                      preferedTenants={listing.prefered_tenants}
+                      furnishing={listing.furnishing}
+                      available={listing.is_available}
+                      amenities={listing.amenities}
+                    />
+                  ))}
+            </div>
+
+            {/* Show More Button */}
+            {hasMoreData && !isLoading && (
+              <button
+                onClick={loadMore}
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md w-full"
+              >
+                Show More
+              </button>
+            )}
+
+            {/* Loading Indicator for Pagination */}
+            {isLoading && listingData.length > 0 && (
+              <div className="flex justify-center mt-4">
+                <Spinner size="lg" />
               </div>
-
-              {/* Show More Button */}
-              {hasMoreData && !isLoading && (
-                <button
-                  onClick={loadMore}
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md w-full"
-                >
-                  Show More
-                </button>
-              )}
-
-              {/* Loading Indicator for Pagination */}
-              {isLoading && listingData.length > 0 && (
-                <div className="flex justify-center mt-4">
-                  <Spinner size="lg" />
-                </div>
-              )}
-            </main>
-          </div>
+            )}
+          </main>
         </div>
       </div>
     </>
