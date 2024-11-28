@@ -9,9 +9,7 @@ export default function Logout() {
 
   useEffect(() => {
     logout();
-    setTimeout(() => {
-      redirect("/login");
-    }, 5000);
+    redirect("/login");
   }, [logout]);
 
   return (

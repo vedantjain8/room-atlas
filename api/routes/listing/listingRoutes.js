@@ -163,7 +163,8 @@ router.get("/", async (req, res) => {
       lm.floor,
       lm.total_floors,
       lm.areasqft,
-      ARRAY_AGG(a.amenity_name) AS amenities
+      ARRAY_AGG(DISTINCT(pl.preference_id)) AS preference_id,
+      ARRAY_AGG(DISTINCT(a.amenity_name)) AS amenities
     FROM
       listing
     JOIN 
@@ -178,6 +179,10 @@ router.get("/", async (req, res) => {
       amenities a
     ON
       la.amenity_id = a.amenity_id 
+    LEFT JOIN
+      preference_listing pl
+    ON
+      listing.listing_id = pl.listing_id
     ${whereClause}
     GROUP BY 
       listing.listing_id,
@@ -420,7 +425,9 @@ router.get("/:id", async (req, res) => {
           lm.floor,
           lm.total_floors,
           lm.areasqft,
-          ARRAY_AGG(a.amenity_name) AS amenities
+          ARRAY_AGG(DISTINCT(a.amenity_id)) AS amenity_id,
+          ARRAY_AGG(DISTINCT(pl.preference_id)) AS preference_id,
+          ARRAY_AGG(DISTINCT(a.amenity_name)) AS amenities
       FROM
           listing
       JOIN 
@@ -435,6 +442,10 @@ router.get("/:id", async (req, res) => {
           amenities a
       ON
           la.amenity_id = a.amenity_id 
+      LEFT JOIN
+        preference_listing pl
+      ON
+        listing.listing_id = pl.listing_id
       WHERE listing.listing_id = $1
       GROUP BY 
           listing.listing_id,
@@ -467,6 +478,200 @@ router.get("/:id", async (req, res) => {
     return res.status(200).json({ message: result.rows[0] });
   } catch (error) {
     console.error("Error fetching listing:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/:id", authenticateToken, async (req, res) => {
+  const listing_id = req.params.id;
+  const userdata = await getUserData(req.user.userID);
+  if (userdata.email_verified === false)
+    return res.status(400).json({ message: "Email not verified" });
+
+  let {
+    accommodation_type,
+    listing_title,
+    listing_desc = null,
+    image_json,
+    uploaded_on,
+    area,
+    city,
+    state,
+    preference_list = [], //TODO: sort the order of the list
+    amenities_list = [],
+    listing_type, // Appartment, villa, bungalow i.e. 0,1,2
+    prefered_tenants, // Family, bachelor, students
+    is_available,
+    bedrooms,
+    bathrooms,
+    rent,
+    deposit,
+    furnishing,
+    floor_no,
+    total_floors,
+    areasqft,
+  } = req.body;
+
+  if (!accommodation_type)
+    return res
+      .status(400)
+      .json({ message: "Enter a valid accommodation type" });
+
+  if (!listing_title)
+    return res.status(400).json({ message: "Enter a valid listing title" });
+
+  // optional description
+
+  if (!uploaded_on) uploaded_on = new Date();
+
+  if (!area) return res.status(400).json({ message: "Enter a valid area" });
+
+  if (!city) return res.status(400).json({ message: "Enter a valid city" });
+
+  if (!state) return res.status(400).json({ message: "Enter a valid state" });
+
+  if (!image_json)
+    return res.status(400).json({ message: "Enter atleast one photo" });
+
+  if (!listing_type || isNaN(listing_type))
+    return res.status(400).json({ message: "Enter a valid listing_type" });
+
+  if (isNaN(prefered_tenants) || !prefered_tenants)
+    return res.status(400).json({ message: "Enter a valid prefered_tenant" });
+
+  if (isNaN(furnishing) || !furnishing)
+    return res.status(400).json({ message: "Enter a valid furnishing" });
+
+  if (!is_available || typeof is_available !== "boolean")
+    return res.status(400).json({ message: "Enter a valid is_available" });
+
+  if (!bedrooms)
+    return res.status(400).json({ message: "Enter a valid bedrooms" });
+
+  if (!bathrooms)
+    return res.status(400).json({ message: "Enter a valid bath" });
+
+  if (!rent || rent <= 0)
+    return res.status(400).json({ message: "Enter a valid rent" });
+
+  if (!deposit || deposit <= 0)
+    return res.status(400).json({ message: "Enter a valid deposit" });
+
+  if (!floor_no || floor_no <= 0)
+    return res.status(400).json({ message: "Enter a valid floor_no" });
+
+  if (!total_floors || total_floors <= 0)
+    return res.status(400).json({ message: "Enter a valid total_floors" });
+
+  if (!areasqft || areasqft <= 0)
+    return res.status(400).json({ message: "Enter a valid areasqft" });
+
+  if (preference_list && preference_list.length > 0) {
+    if (!Array.isArray(preference_list))
+      return res.status(400).json({ message: "Enter a valid preference_list" });
+    preference_list.sort((a, b) => a - b);
+  }
+
+  if (amenities_list && amenities_list.length > 0) {
+    if (!Array.isArray(amenities_list))
+      return res.status(400).json({ message: "Enter a valid amenities_list" });
+    amenities_list.sort((a, b) => a - b);
+  }
+
+  try {
+    const listing_result = await pool.query(
+      `UPDATE listing SET
+      accommodation_type = $1,
+      listing_title = $2,
+      listing_desc = $3,
+      images = $4,
+      uploaded_by = $5,
+      uploaded_on = $6,
+      is_available = $7,
+      area = $8,
+      city = $9,
+      state = $10
+      WHERE listing_id = $11`,
+      [
+        accommodation_type,
+        listing_title,
+        listing_desc,
+        image_json,
+        req.user.userID,
+        uploaded_on,
+        is_available,
+        area,
+        city,
+        state,
+        listing_id,
+      ]
+    );
+
+    if (listing_result.rowCount === 0) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    Promise.all([
+      pool.query(`DELETE FROM preference_listing WHERE listing_id = $1`, [
+        listing_id,
+      ]),
+      pool.query(`DELETE FROM listing_amenities WHERE listing_id = $1`, [
+        listing_id,
+      ]),
+    ]);
+
+    if (preference_list && preference_list.length > 0) {
+      const preferenceQuery = `
+        INSERT INTO preference_listing (listing_id, preference_id)
+        SELECT $1, UNNEST($2::INT[])
+        ON CONFLICT (listing_id, preference_id) DO NOTHING;
+      `;
+      await pool.query(preferenceQuery, [listing_id, preference_list]);
+    }
+
+    // Batch insert amenities (if any)
+    if (amenities_list && amenities_list.length > 0) {
+      const amenitiesQuery = `
+        INSERT INTO listing_amenities (listing_id, amenity_id)
+        SELECT $1, UNNEST($2::INT[])
+        ON CONFLICT (listing_id, amenity_id) DO NOTHING;
+      `;
+      await pool.query(amenitiesQuery, [listing_id, amenities_list]);
+    }
+
+    await pool.query(
+      `UPDATE listing_metadata SET
+      listing_type = $1,
+      prefered_tenants = $2,
+      is_available = $3,
+      bedrooms = $4,
+      bathrooms = $5,
+      rent = $6,
+      deposit = $7,
+      furnishing = $8,
+      floor = $9,
+      total_floors = $10,
+      areasqft = $11
+      WHERE listing_id = $12`,
+      [
+        listing_type,
+        prefered_tenants,
+        is_available,
+        bedrooms,
+        bathrooms,
+        rent,
+        deposit,
+        furnishing,
+        floor_no,
+        total_floors,
+        areasqft,
+        listing_id,
+      ]
+    );
+
+    return res.status(200).json({ message: "Listing updated successfully" });
+  } catch (error) {
+    console.error("Error updating listing:", error);
     return res.status(500).json({ message: "Server error" });
   }
 });

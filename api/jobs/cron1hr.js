@@ -42,16 +42,20 @@ async function feedbackCronJob() {
 
 async function updateStats() {
   const viewCount = await redisClient.hGetAll("viewCount");
+
   if (viewCount && Object.keys(viewCount).length > 0) {
     let params = [];
 
-    for (key in viewCount) {
+    for (const key in viewCount) {
       const listingID = key;
       const likeCount = await getLikeCount(listingID);
       const viewCount = await getViewCount(listingID);
       const shareCount = await getShareCount(listingID);
 
-      params.push([listingID, viewCount, likeCount, shareCount]);
+      // Only include data if at least one metric is valid
+      if (likeCount || viewCount || shareCount) {
+        params.push([listingID, viewCount, likeCount, shareCount]);
+      }
     }
 
     const cases = {
@@ -74,29 +78,43 @@ async function updateStats() {
       cases.ids.push(listingID);
     });
 
-    const query = `
-    UPDATE listing_stats
-    SET 
-      views = CASE listing_id ${cases.views.join(" ")} ELSE views END,
-      likes = CASE listing_id ${cases.likes.join(" ")} ELSE likes END,
-      shares = CASE listing_id ${cases.shares.join(" ")} ELSE shares END
-    WHERE listing_id IN (${cases.ids.join(", ")});
-  `;
+    // Build the query dynamically only for non-empty cases
+    const queryParts = [];
+    if (cases.views.length > 0) {
+      queryParts.push(
+        `views = CASE listing_id ${cases.views.join(" ")} ELSE views END`
+      );
+    }
+    if (cases.likes.length > 0) {
+      queryParts.push(
+        `likes = CASE listing_id ${cases.likes.join(" ")} ELSE likes END`
+      );
+    }
+    if (cases.shares.length > 0) {
+      queryParts.push(
+        `shares = CASE listing_id ${cases.shares.join(" ")} ELSE shares END`
+      );
+    }
 
-    pool.query(query, (err, result) => {
-      if (err) {
-        console.error("Error updating stats:", err, "with query: ", query);
-        return;
-      }
-      if (result) {
-        params = [];
-        cases.views = [];
-        cases.likes = [];
-        cases.shares = [];
-        cases.ids = [];
+    if (queryParts.length > 0 && cases.ids.length > 0) {
+      const query = `
+        UPDATE listing_stats
+        SET ${queryParts.join(", ")}
+        WHERE listing_id IN (${cases.ids.join(", ")});
+      `;
+
+      pool.query(query, (err, result) => {
+        if (err) {
+          console.error("Error updating stats:", err, "with query: ", query);
+          return;
+        }
         console.log("Stats updated successfully");
-      }
-    });
+      });
+    } else {
+      console.log("No data to update.");
+    }
+  } else {
+    console.log("No view count data available.");
   }
 }
 

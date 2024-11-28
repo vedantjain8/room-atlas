@@ -3,6 +3,7 @@
 import { ImagesSlider } from "@/components/ui/images-slider";
 import { Avatar, Button, Divider, Image, Input } from "@nextui-org/react";
 import { Eye, Heart, Link, Pen, PencilLine, Send, Share } from "lucide-react";
+import { setCookie, hasCookie } from "cookies-next";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/app/contexts/AuthContext";
@@ -10,13 +11,14 @@ import { redirect } from "next/navigation";
 // import imageflat from 'room-atlas/frontend/src/app/images/flat_image.png';
 
 function ListingDetails({ params }: { params: { listingID: string } }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(true);
   const [listingData, setListingData] = useState<any>(null);
   const [statsData, setStatsData] = useState<any>(null);
   const [reviewData, setReviewData] = useState<any>(null);
   const [postReviewData, setPostReviewData] = useState<string>();
+  const [ownerDetails, setOwnerDetails] = useState<any>(null);
   const listingID = params.listingID;
 
   const shareData = {
@@ -43,10 +45,24 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
       const data = await res.json();
       setListingData(data.message);
       await fetchStats();
+      await fetchOwnerDetails(data.message.uploaded_by.toString());
     } catch (error) {
       console.error("Error fetching listing data:", error);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function fetchOwnerDetails(ownerID: string) {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/user/${ownerID}`
+      );
+      if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
+      const data = await res.json();
+      setOwnerDetails(data.message);
+    } catch (error) {
+      console.error("Error fetching owner data:", error);
     }
   }
 
@@ -90,6 +106,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           body: JSON.stringify({
             review: postReviewData,
             listing_id: listingID,
+            user_id: user.user_id,
           }),
         }
       );
@@ -99,7 +116,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
       }
 
       const data = await response.json();
-      console.log("Review created successfully:", data);
+
       alert("Review created successfully!");
     } catch (error) {
       console.error("Request failed:", error);
@@ -250,8 +267,39 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
         </div>
         <div className="flex gap-2 md:gap-4 pr-0 md:pr-4">
           <div className="flex gap-2 items-center">
-            <Heart className="text-red-500" />
-            <span className="text-sm md:text-base">{statsData.likes || 0}</span>
+            <Button
+              onClick={async () => {
+                const exists = hasCookie(`listing_${listingID}_like`);
+                console.log(exists);
+                if (exists) return;
+                await fetch(
+                  `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${listingID}/like`,
+                  {
+                    method: "GET",
+                    headers: {
+                      Authorization: `${token}`,
+                    },
+                  }
+                );
+                setCookie(`listing_${listingID}_like`, "true");
+
+                setStatsData((prev: any) => {
+                  return {
+                    ...prev,
+                    likes: prev.likes + 1,
+                  };
+                });
+              }}
+            >
+              {hasCookie(`listing_${listingID}_like`) ? (
+                <Heart className="text-red-500" />
+              ) : (
+                <Heart className="text-white" />
+              )}
+              <span className="text-sm md:text-base">
+                {statsData.likes || 0}
+              </span>
+            </Button>
           </div>
           <Link onClick={shareHandler}>
             <div className="flex gap-2 items-center">
@@ -263,8 +311,10 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
       </div>
       <div className="flex flex-col gap-4">
         <div className="flex gap-4 items-center">
-          <Avatar />
-          <h2>Owner Name</h2>
+          <Avatar
+            src={`${process.env.NEXT_PUBLIC_HOSTNAME}${ownerDetails.avatar}`}
+          />
+          <h2>{ownerDetails.username}</h2>
         </div>
         <div className="flex flex-col gap-2 border-1 border-sky-600 rounded p-3">
           <h2 className="text-sky-800">Description</h2>
@@ -292,14 +342,20 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           </div>
         </div>
 
-        {reviewData.map((review: any) => (
-          <div className="flex flex-row p-4 border-1 border-sky-600 rounded-lg w-full mt-6 gap-4">
+        {reviewData.map((review: any, index: number) => (
+          <div
+            key={index}
+            className="flex flex-row p-4 border border-sky-600 rounded-lg w-full mt-6 gap-4 bg-white shadow-md"
+          >
             <div className="flex gap-4 items-start">
-              <Avatar />
+              <Avatar
+                src={`${process.env.NEXT_PUBLIC_HOSTNAME}${review.user.avatar}`}
+                className="w-12 h-12"
+              />
             </div>
-            <div className="flex flex-col gap-4 items-start justify-center">
-              <h2 className="pt-1 font-semibold">{review.user_id}</h2>
-              <p className="pl-2">{review.review}</p>
+            <div className="flex flex-col gap-2 items-start justify-center">
+              <h2 className="font-semibold text-lg">{review.user.username}</h2>
+              <p className="text-gray-700">{review.review}</p>
             </div>
           </div>
         ))}

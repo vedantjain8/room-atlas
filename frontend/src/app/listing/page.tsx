@@ -170,255 +170,257 @@ const ListingsPage: React.FC = () => {
     return <div className="text-red-500">Failed to load listings.</div>;
 
   return (
-    <>
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 w-full">
-        {/* Sidebar */}
-        <div className="md:w-1/4 lg:w-3/12 bg-white p-6">
-          <div className="flex flex-col gap-2 bg-white p-4 rounded-lg shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Filters</h2>
-              <Button
-                className="text-sm font-medium bg-sky-500 text-blue-100 hover:bg-sky-400 rounded-none"
-                onClick={() => {
-                  setSelectedBHK([]);
-                  setSelectedBathroom([]);
-                  setSelectedType([]);
-                  setSelectedTenant([]);
-                  setSelectedFurnishing([]);
-                  setSelectedAmenities([]);
-                  setSelectedPreferences([]);
-                  setRentRange([0, 50000]);
-                  setDepositRange([0, 50000]);
-                  setAccommodation_type(0);
-                }}
-              >
-                <RefreshCw />
-                Reset
-              </Button>
-            </div>
-            <Select
-              label="Accommodation type"
-              value={selectedAccommodation_type?.toString()}
-              onChange={(value) => {
-                console.log;
-                setAccommodation_type(Number(value.target.value));
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 w-full">
+      {/* Sidebar */}
+      <div className="md:w-1/4 lg:w-3/12 bg-white p-6">
+        <div className="flex flex-col gap-2 bg-white p-4 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">Filters</h2>
+            <Button
+              className="text-sm font-medium bg-sky-500 text-blue-100 hover:bg-sky-400 rounded-none"
+              onClick={() => {
+                setSelectedBHK([]);
+                setSelectedBathroom([]);
+                setSelectedType([]);
+                setSelectedTenant([]);
+                setSelectedFurnishing([]);
+                setSelectedAmenities([]);
+                setSelectedPreferences([]);
+                setRentRange([0, 50000]);
+                setDepositRange([0, 50000]);
+                setAccommodation_type(0);
               }}
             >
-              {acco.map((a: string, index: number) => (
-                <SelectItem key={index} value={index.toString()}>
-                  {a}
-                </SelectItem>
-              ))}
-            </Select>
+              <RefreshCw />
+              Reset
+            </Button>
+          </div>
+          <Select
+            label="Accommodation type"
+            value={selectedAccommodation_type?.toString()}
+            onChange={(value) => {
+              console.log;
+              setAccommodation_type(Number(value.target.value));
+            }}
+          >
+            {acco.map((a: string, index: number) => (
+              <SelectItem key={index} value={index.toString()}>
+                {a}
+              </SelectItem>
+            ))}
+          </Select>
 
-            {/* Slider Components */}
+          {/* Slider Components */}
+          <Slider
+            label="Rent Range"
+            step={50}
+            minValue={0}
+            maxValue={50000}
+            defaultValue={rentRange}
+            onChange={(value) => setRentRange(value as [number, number])}
+            className="max-w-md"
+          />
+
+          <div>
             <Slider
-              label="Rent Range"
+              label="Deposit Range"
               step={50}
               minValue={0}
               maxValue={50000}
-              defaultValue={rentRange}
-              onChange={(value) => setRentRange(value as [number, number])}
+              defaultValue={depositRange}
+              onChange={(value) => setDepositRange(value as [number, number])}
               className="max-w-md"
             />
+          </div>
 
-            <div>
-              <Slider
-                label="Deposit Range"
-                step={50}
-                minValue={0}
-                maxValue={50000}
-                defaultValue={depositRange}
-                onChange={(value) => setDepositRange(value as [number, number])}
-                className="max-w-md"
-              />
+          <div className="mb-4">
+            <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
+              BHK
+            </h3>
+            <div className="flex items-center gap-y-2">
+              <CheckboxGroup
+                orientation="vertical"
+                value={selectedBHK}
+                onValueChange={setSelectedBHK}
+              >
+                <Checkbox value="1">1bhk</Checkbox>
+                <Checkbox value="2">2bhk</Checkbox>
+                <Checkbox value="3">3bhk</Checkbox>
+                <Checkbox value="4">4bhk+</Checkbox>
+              </CheckboxGroup>
             </div>
+          </div>
+          <select
+            id="listing_state"
+            name="listing_state"
+            value={selectedState}
+            onChange={(value) => {
+              setSelectedState(value.target.value);
+            }}
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option className="opacity-55">Select State</option>
 
-            <div className="mb-4">
-              <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
-                BHK
-              </h3>
-              <div className="flex items-center gap-y-2">
-                <CheckboxGroup
-                  orientation="vertical"
-                  value={selectedBHK}
-                  onValueChange={setSelectedBHK}
-                >
-                  <Checkbox value="1">1bhk</Checkbox>
-                  <Checkbox value="2">2bhk</Checkbox>
-                  <Checkbox value="3">3bhk</Checkbox>
-                  <Checkbox value="4">4bhk+</Checkbox>
-                </CheckboxGroup>
-              </div>
+            {states.map((state: { name: string; isoCode: string }) => (
+              <option key={state.name} value={state.isoCode}>
+                {state.name}
+              </option>
+            ))}
+          </select>
+          <select
+            id="listing_city"
+            name="listing_city"
+            value={selectedCity}
+            onChange={(value) => {
+              setSelectedCity(value.target.value);
+            }}
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+          >
+            <option className="opacity-55">Select City</option>
+
+            {cities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
+          <div className="mb-4">
+            <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
+              Bathrooms
+            </h3>
+            <div className="flex items-center gap-y-2">
+              <CheckboxGroup
+                orientation="horizontal"
+                value={selectedBathroom}
+                onValueChange={setSelectedBathroom}
+                className="grid grid-cols-3"
+              >
+                <Checkbox value="1">1</Checkbox>
+                <Checkbox value="2">2</Checkbox>
+                <Checkbox value="3">3</Checkbox>
+                <Checkbox value="4">4</Checkbox>
+              </CheckboxGroup>
             </div>
-            <select
-              id="listing_state"
-              name="listing_state"
-              value={selectedState}
-              onChange={(value) => {
-                setSelectedState(value.target.value);
-              }}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option className="opacity-55">Select State</option>
+          </div>
 
-              {states.map((state: { name: string; isoCode: string }) => (
-                <option key={state.name} value={state.isoCode}>
-                  {state.name}
-                </option>
-              ))}
-            </select>
-            <select
-              id="listing_city"
-              name="listing_city"
-              value={selectedCity}
-              onChange={(value) => {
-                setSelectedCity(value.target.value);
-              }}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-            >
-              <option className="opacity-55">Select City</option>
-
-              {cities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-            <div className="mb-4">
-              <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
-                Bathrooms
-              </h3>
-              <div className="flex items-center gap-y-2">
-                <CheckboxGroup
-                  orientation="horizontal"
-                  value={selectedBathroom}
-                  onValueChange={setSelectedBathroom}
-                  className="grid grid-cols-3"
-                >
-                  <Checkbox value="1">1</Checkbox>
-                  <Checkbox value="2">2</Checkbox>
-                  <Checkbox value="3">3</Checkbox>
-                  <Checkbox value="4">4</Checkbox>
-                </CheckboxGroup>
-              </div>
+          <div className="mb-4">
+            <h3 className="text-sm font-bold mb-2">Type</h3>
+            <div className="grid grid-cols-2 gap-y-2">
+              <CheckboxGroup
+                orientation="horizontal"
+                value={selectedType}
+                onValueChange={setSelectedType}
+              >
+                <Checkbox value="1">Apartment</Checkbox>
+                <Checkbox value="2">Villa</Checkbox>
+                <Checkbox value="3">Bungalow</Checkbox>
+              </CheckboxGroup>
             </div>
+          </div>
 
-            <div className="mb-4">
-              <h3 className="text-sm font-bold mb-2">Type</h3>
-              <div className="grid grid-cols-2 gap-y-2">
-                <CheckboxGroup
-                  orientation="horizontal"
-                  value={selectedType}
-                  onValueChange={setSelectedType}
-                >
-                  <Checkbox value="1">Apartment</Checkbox>
-                  <Checkbox value="2">Villa</Checkbox>
-                  <Checkbox value="3">Bungalow</Checkbox>
-                </CheckboxGroup>
-              </div>
+          <div className="mb-4">
+            <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
+              Tenant
+            </h3>
+            <div className="grid grid-cols-2 items-center gap-y-2">
+              <CheckboxGroup
+                orientation="horizontal"
+                value={selectedTenant}
+                onValueChange={setSelectedTenant}
+              >
+                <Checkbox value="1">Student</Checkbox>
+                <Checkbox value="2">Company</Checkbox>
+              </CheckboxGroup>
             </div>
+          </div>
 
-            <div className="mb-4">
-              <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
-                Tenant
-              </h3>
-              <div className="grid grid-cols-2 items-center gap-y-2">
-                <CheckboxGroup
-                  orientation="horizontal"
-                  value={selectedTenant}
-                  onValueChange={setSelectedTenant}
-                >
-                  <Checkbox value="1">Student</Checkbox>
-                  <Checkbox value="2">Company</Checkbox>
-                </CheckboxGroup>
-              </div>
+          <div className="mb-4">
+            <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
+              Furnishings
+            </h3>
+            <div className="grid grid-cols-2 items-center gap-y-2">
+              <CheckboxGroup
+                orientation="horizontal"
+                value={selectedFurnishing}
+                onValueChange={setSelectedFurnishing}
+              >
+                <Checkbox value="1">No furnishings</Checkbox>
+                <Checkbox value="2">Half-furnished</Checkbox>
+                <Checkbox value="3">Full-furnished</Checkbox>
+              </CheckboxGroup>
             </div>
+          </div>
 
-            <div className="mb-4">
-              <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
-                Furnishings
-              </h3>
-              <div className="grid grid-cols-2 items-center gap-y-2">
-                <CheckboxGroup
-                  orientation="horizontal"
-                  value={selectedFurnishing}
-                  onValueChange={setSelectedFurnishing}
-                >
-                  <Checkbox value="1">No furnishings</Checkbox>
-                  <Checkbox value="2">Half-furnished</Checkbox>
-                  <Checkbox value="3">Full-furnished</Checkbox>
-                </CheckboxGroup>
-              </div>
+          <div className="mb-4">
+            <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
+              Amenities
+            </h3>
+            <div className="grid grid-cols-2 items-center gap-y-2">
+              <CheckboxGroup
+                orientation="vertical"
+                value={selectedAmenities}
+                onValueChange={setSelectedAmenities}
+              >
+                {amenities.map(
+                  (amenity: { amenity_id: string; amenity_name: string }) => (
+                    <Checkbox
+                      key={amenity.amenity_id}
+                      id={`amenity-${amenity.amenity_id}`}
+                      value={amenity.amenity_id}
+                    >
+                      {amenity.amenity_name}
+                    </Checkbox>
+                  )
+                )}
+              </CheckboxGroup>
             </div>
-
-            <div className="mb-4">
-              <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
-                Amenities
-              </h3>
-              <div className="grid grid-cols-2 items-center gap-y-2">
-                <CheckboxGroup
-                  orientation="vertical"
-                  value={selectedAmenities}
-                  onValueChange={setSelectedAmenities}
-                >
-                  {amenities.map(
-                    (amenity: { amenity_id: string; amenity_name: string }) => (
-                      <Checkbox
-                        key={amenity.amenity_id}
-                        id={`amenity-${amenity.amenity_id}`}
-                        value={amenity.amenity_id}
-                      >
-                        {amenity.amenity_name}
-                      </Checkbox>
-                    )
-                  )}
-                </CheckboxGroup>
-              </div>
-            </div>
-            <div className="mb-4">
-              <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
-                Preferences
-              </h3>
-              <div className="grid grid-cols-2 items-center gap-y-2">
-                <CheckboxGroup
-                  orientation="vertical"
-                  value={selectedPreferences}
-                  onValueChange={setSelectedPreferences}
-                  className="grid grid-cols-2 gap-2"
-                >
-                  {preferences.map(
-                    (preference: {
-                      preference_id: string;
-                      preference: string;
-                    }) => (
-                      <Checkbox
-                        key={preference.preference_id}
-                        id={`preference-${preference.preference_id}`}
-                        value={preference.preference_id}
-                      >
-                        {preference.preference}
-                      </Checkbox>
-                    )
-                  )}
-                </CheckboxGroup>
-              </div>
+          </div>
+          <div className="mb-4">
+            <h3 className="sm:text-sm md:text-sm lg:text-md font-bold mb-2">
+              Preferences
+            </h3>
+            <div className="grid grid-cols-2 items-center gap-y-2">
+              <CheckboxGroup
+                orientation="vertical"
+                value={selectedPreferences}
+                onValueChange={setSelectedPreferences}
+                className="grid grid-cols-2 gap-2"
+              >
+                {preferences.map(
+                  (preference: {
+                    preference_id: string;
+                    preference: string;
+                  }) => (
+                    <Checkbox
+                      key={preference.preference_id}
+                      id={`preference-${preference.preference_id}`}
+                      value={preference.preference_id}
+                    >
+                      {preference.preference}
+                    </Checkbox>
+                  )
+                )}
+              </CheckboxGroup>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Listings */}
-        <div className="lg:w-9/12 pl-4">
-          <div className="sticky top-20 p-3 bg-white rounded-lg shadow-lg items-center h-14 z-30">
-            <Input
-              type="search"
-              placeholder="Type to search..."
-              startContent={<Search />}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <main className="p-6">
+      {/* Listings */}
+      <div className="lg:w-9/12 pl-4">
+        <div className="sticky top-20 p-3 bg-white rounded-lg shadow-lg items-center h-14 z-30">
+          <Input
+            type="search"
+            placeholder="Type to search..."
+            startContent={<Search />}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="mt-14">
+          {/* Main Content - Listings Grid */}
+          <main className="flex-1 p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {/* Skeleton Loading */}
               {isLoading && listingData.length === 0
                 ? Array.from({ length: 15 }).map((_, index) => (
                     <Card
@@ -480,7 +482,7 @@ const ListingsPage: React.FC = () => {
           </main>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

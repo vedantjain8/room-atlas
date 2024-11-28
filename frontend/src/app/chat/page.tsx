@@ -108,7 +108,6 @@ export default function ChatPage() {
   const sendMessage = () => {
     if (!message.trim() || !receiverId) return;
 
-
     const newMessage = {
       message_id: Date.now(),
       sender_id: user?.user_id,
