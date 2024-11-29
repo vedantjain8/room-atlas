@@ -164,6 +164,7 @@ const ListingsPage: React.FC = () => {
       // Clear cities if no state is selected
       setCities([]);
     }
+    
   }, [selectedState]);
 
   if (error)
@@ -459,6 +460,7 @@ const ListingsPage: React.FC = () => {
                       furnishing={listing.furnishing}
                       available={listing.is_available}
                       amenities={listing.amenities}
+                      isListing={true}
                     />
                   ))}
             </div>

@@ -26,7 +26,9 @@
     "socket.io-client": "^4.8.1",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "cookies-next": "^4.3.0"
+
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

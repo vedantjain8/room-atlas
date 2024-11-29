@@ -134,7 +134,7 @@ export default function ChatPage() {
       <div
         className={`${
           isMenuOpen ? "block" : "hidden md:flex"
-        } flex-col w-64 bg-white border-r border-gray-200 h-full`}
+        } flex-col w-3/6 md:w-2/6 bg-white border-r border-gray-200 h-full`}
       >
         <div className="flex items-center justify-between bg-sky-800 text-white px-6 py-4 shadow-md">
           <h2 className="text-lg font-semibold">Messages</h2>
@@ -189,18 +189,18 @@ export default function ChatPage() {
       {receiverId && (
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <div className="flex fixed top-8 mt-1 h-24 w-full md:w-5/6 items-end justify-between bg-sky-600 text-white px-6 py-4 shadow-md">
+          <div className="flex fixed top-8 mt-8 h-24 w-full md:w-5/6 items-center gap-4 justify-start bg-sky-600 text-white px-6 py-4 shadow-md">
             <button
               className="block md:hidden text-white"
               onClick={() => setIsMenuOpen(true)}
             >
               ☰
             </button>
-            <h1 className="text-lg font-semibold">{receiverName}</h1>
+            <h1 className="text-lg font-semibold">{capitalizeFirstLetter(receiverName)}</h1>
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 p-6 bg-gray-50 mt-16 pb-44 break-words">
+          <div className="flex-1 p-6 bg-gray-50 mt-16 pb-44 break-words overflow-y-auto">
             {messages.map((msg) => (
               <div
                 key={msg.message_id}
@@ -228,7 +228,7 @@ export default function ChatPage() {
           </div>
 
           {/* Message Input */}
-          <div className="flex fixed bottom-0 w-full md:w-5/6 items-center gap-2 bg-white py-3 border-t pr-8 border-gray-200">
+          <div className="flex sticky bottom-0 w-full items-center gap-2 bg-white py-3 border-t pr-8 border-gray-200">
             <Input
               type="text"
               value={message}

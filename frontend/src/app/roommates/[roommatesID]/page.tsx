@@ -7,35 +7,37 @@ import {
   Heart,
   Link,
   MapPin,
-  MapPinned,
   Pen,
   PencilLine,
   Send,
   Share,
 } from "lucide-react";
 import {
-  getCookie,
-  getCookies,
-  setCookie,
-  deleteCookie,
-  hasCookie,
-} from "cookies-next";
-import { useEffect, useState } from "react";
+  AwaitedReactNode,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useEffect,
+  useState,
+} from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { redirect } from "next/navigation";
+import { hasCookie, setCookie } from "cookies-next";
 // import imageflat from 'room-atlas/frontend/src/app/images/flat_image.png';
 
-function ListingDetails({ params }: { params: { listingID: string } }) {
+function ListingDetails({ params }: { params: { roommatesID: string } }) {
   const { token, user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(true);
   const [listingData, setListingData] = useState<any>(null);
   const [statsData, setStatsData] = useState<any>(null);
   const [reviewData, setReviewData] = useState<any>(null);
+  const [roommateData, setRoommateData] = useState<any>([]);
   const [ownerDetails, setOwnerDetails] = useState<any>(null);
   const [postReviewData, setPostReviewData] = useState<string>();
-  const listingID = params.listingID;
+  const roommateID = params.roommatesID;
 
   const shareData = {
     title: "Room Atlas",
@@ -58,23 +60,6 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
     3: "Family",
   };
 
-  async function fetchData(id: string) {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${id}`
-      );
-      if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
-      const data = await res.json();
-      setListingData(data.message);
-      await fetchStats();
-      await fetchOwnerDetails(data.message.uploaded_by.toString());
-    } catch (error) {
-      console.error("Error fetching listing data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
   async function fetchOwnerDetails(ownerID: string) {
     try {
       const res = await fetch(
@@ -88,10 +73,40 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
     }
   }
 
+  async function fetchData(id: string) {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/roommate/${id}`
+      );
+      if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
+      const data = await res.json();
+      setListingData(data.message);
+      await fetchStats();
+      await fetchOwnerDetails(data.message.uploaded_by.toString());
+    } catch (error) {
+      console.error("Error fetching listing data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function fetchRoommates() {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/roommate/${roommateID}/roommatesdetail`
+      );
+      if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
+      const data = await res.json();
+      setRoommateData(data.message);
+    } catch (error) {
+      console.error("Error fetching roommates data:", error);
+    }
+  }
+
   async function fetchStats() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${listingID}/stats`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${roommateID}/stats`
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -102,10 +117,27 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
     }
   }
 
+  async function handleLike() {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${roommateID}/like`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`New result: ${result.likeCount}`);
+      }
+    } catch (error) {
+      console.log("Error: ", error);
+    }
+  }
   async function fetchReview() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/review/${listingID}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/review/${roommateID}`
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -127,7 +159,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           },
           body: JSON.stringify({
             review: postReviewData,
-            listing_id: listingID,
+            listing_id: roommateID,
             user_id: user.user_id,
           }),
         }
@@ -149,11 +181,12 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
 
   // const images_arr = [imageflat]
   useEffect(() => {
-    if (listingID) fetchData(listingID);
-  }, [listingID]);
+    if (roommateID) fetchData(roommateID);
+  }, [roommateID]);
   useEffect(() => {
     fetchStats();
     fetchReview();
+    fetchRoommates();
   }, []);
 
   if (isLoading) {
@@ -167,6 +200,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   const imageList = listingData.images.map((imagePath: string) => {
     return `${process.env.NEXT_PUBLIC_HOSTNAME}${imagePath}`; // Prepend the host if needed
   });
+  console.log(roommateData);
 
   return (
     <div className="flex flex-col p-6 gap-6">
@@ -219,15 +253,15 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
               <span>{statsData.views || 0}</span>
             </div>
           </div>
-          <div className="flex gap-4 pr-4">
+          <div className="flex items-center gap-4 pr-4">
             <div className="flex gap-2 items-center">
               <Button
                 onClick={async () => {
-                  const exists = hasCookie(`listing_${listingID}_like`);
+                  const exists = hasCookie(`listing_${roommateID}_like`);
                   console.log(exists);
                   if (exists) return;
                   await fetch(
-                    `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${listingID}/like`,
+                    `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${roommateID}/like`,
                     {
                       method: "GET",
                       headers: {
@@ -235,7 +269,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
                       },
                     }
                   );
-                  setCookie(`listing_${listingID}_like`, "true");
+                  setCookie(`listing_${roommateID}_like`, "true");
 
                   setStatsData((prev: any) => {
                     return {
@@ -245,7 +279,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
                   });
                 }}
               >
-                {hasCookie(`listing_${listingID}_like`) ? (
+                {hasCookie(`listing_${roommateID}_like`) ? (
                   <Heart className="text-red-500" />
                 ) : (
                   <Heart className="text-white" />
@@ -258,6 +292,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
             <Link onClick={shareHandler}>
               <div className="flex gap-2 items-center">
                 <Share className="text-blue-500" />
+                <span>Share</span>
               </div>
             </Link>
           </div>
@@ -290,7 +325,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           <div className="flex items-center justify-evenly gap-3 bg-gray-100 border-1 border-slate-300 rounded-lg p-4">
             <h2>{listingData.bedrooms}BHK</h2>
             <Divider orientation="vertical" />
-            <h2>For {tenantTypes[listingData.prefered_tenants]}</h2>
+            <h2>{listingData.bathrooms} bathroom</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 md:gap-4 justify-center items-center border border-gray-300 rounded-lg p-2 md:p-4 bg-gray-50">
             {listingData.amenities.map((amenity: string, index: string) => (
@@ -306,7 +341,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           <Button
             className="bg-gradient-to-br from-sky-500 to-blue-700 text-white text-xs md:text-base"
             onClick={() => {
-              redirect(`/chat?receiverId=${listingData.uploaded_by}`);
+              window.location.href = `/chat?receiverId=${listingData.uploaded_by}`;
             }}
           >
             <Send strokeWidth={1.5} />
@@ -327,11 +362,11 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           <div className="flex gap-2 items-center">
             <Button
               onClick={async () => {
-                const exists = hasCookie(`listing_${listingID}_like`);
+                const exists = hasCookie(`listing_${roommateID}_like`);
                 console.log(exists);
                 if (exists) return;
                 await fetch(
-                  `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${listingID}/like`,
+                  `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${roommateID}/like`,
                   {
                     method: "GET",
                     headers: {
@@ -339,7 +374,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
                     },
                   }
                 );
-                setCookie(`listing_${listingID}_like`, "true");
+                setCookie(`listing_${roommateID}_like`, "true");
 
                 setStatsData((prev: any) => {
                   return {
@@ -349,7 +384,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
                 });
               }}
             >
-              {hasCookie(`listing_${listingID}_like`) ? (
+              {hasCookie(`listing_${roommateID}_like`) ? (
                 <Heart className="text-red-500" />
               ) : (
                 <Heart className="text-white" />
@@ -379,7 +414,42 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           <h2>{listingData.listing_desc}</h2>
         </div>
       </div>
+      {/* This is the roommate section  */}
 
+      <div className="flex flex-col gap-2 border-1 border-sky-600 rounded p-3">
+        <h1>Roommates</h1>
+        <div className="flex flex-col md:flex-row gap-y-4 justify-between">
+          {roommateData.length > 0 ? (
+            roommateData.map(
+              (roommate: {
+                user_id: string;
+                username: string;
+                avatar: string;
+                city: string;
+                state: string;
+                preferences: string;
+              }) => (
+                <div key={roommate.user_id} className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar src={roommate.avatar} />
+                    <h2>{roommate.username}</h2>
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-2">
+                    {roommate.preferences?.split(",").map((pr) => (
+                      <div className="bg-sky-600 text-white rounded-lg p-2">
+                        {" "}
+                        <p>{pr}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            )
+          ) : (
+            <p>No roommates available.</p>
+          )}
+        </div>
+      </div>
       <div className="flex flex-col">
         <div className="flex flex-col w-full gap-4">
           <h2 className="text-xl font-semibold">Review</h2>

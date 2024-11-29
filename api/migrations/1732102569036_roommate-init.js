@@ -54,12 +54,18 @@ exports.up = (pgm) => {
   pgm.sql(`
     INSERT INTO listing (listing_title, listing_desc, images, uploaded_by, is_available, rented_on, area, city, state, accommodation_type)
   VALUES
-  ('Roommate Wanted: Cozy Apartment', 'Looking for a roommate to share a cozy 2-bedroom apartment.', '["roommate1.jpg", "roommate2.jpg"]', 1, true, NULL, 'Downtown', 'New York', 'NY', 99),
-  ('Shared Villa', 'Seeking roommate for a luxurious villa with private pool.', '["roommate1.jpg", "roommate2.jpg"]', 1, true, NULL, 'Palm Beach', 'Miami', 'FL', 99),
-  ('Studio Share Available', 'Sharing a modern studio in the heart of the city.', '["roommate1.jpg", "roommate2.jpg"]', 1, true, NULL, 'Midtown', 'Los Angeles', 'CA', 99),
-  ('Roommate Needed: Beachside Cottage', 'Looking for a roommate for a beachside cottage.', '["roommate1.jpg", "roommate2.jpg"]', 1, true, NULL, 'Oceanfront', 'San Diego', 'CA', 99),
-  ('Room for Rent: Suburban House', 'One room available in a peaceful suburban home.', '["roommate1.jpg", "roommate2.jpg"]', 1, true, NULL, 'Greenwood', 'Seattle', 'WA', 99);
+  ('Roommate Wanted: Cozy Apartment', 'Looking for a roommate to share a cozy 2-bedroom apartment.', '["/assets/upload/images/roommate1.jpg", "/assets/upload/images/roommate2.jpg"]', 1, true, NULL, 'Downtown', 'New York', 'NY', 99),
+  ('Shared Villa', 'Seeking roommate for a luxurious villa with private pool.', '["/assets/upload/images/roommate1.jpg", "/assets/upload/images/roommate2.jpg"]', 1, true, NULL, 'Palm Beach', 'Miami', 'FL', 99),
+  ('Studio Share Available', 'Sharing a modern studio in the heart of the city.', '["/assets/upload/images/roommate1.jpg", "/assets/upload/images/roommate2.jpg"]', 1, true, NULL, 'Midtown', 'Los Angeles', 'CA', 99),
+  ('Roommate Needed: Beachside Cottage', 'Looking for a roommate for a beachside cottage.', '["/assets/upload/images/roommate1.jpg", "/assets/upload/images/roommate2.jpg"]', 1, true, NULL, 'Oceanfront', 'San Diego', 'CA', 99),
+  ('Room for Rent: Suburban House', 'One room available in a peaceful suburban home.', '["/assets/upload/images/roommate1.jpg", "/assets/upload/images/roommate2.jpg"]', 1, true, NULL, 'Greenwood', 'Seattle', 'WA', 99);
 
+  INSERT INTO user_listing_connection (
+    listing_id, user_id, is_approved, connection_type
+  ) VALUES
+    (29, 2, true, 'listing');
+    
+    
   INSERT INTO roommate_listing_metadata (
     listing_id, roommates_needed, max_roommates, listing_type, bedrooms, bathrooms, 
     rent, deposit, furnishing, lease_duration, floor, total_floors, areasqft
@@ -69,6 +75,11 @@ exports.up = (pgm) => {
     (31, 1, 1, 3, 1, 1, 950.00, 500.00, 0, 12, 5, 20, 450),
     (32, 1, 3, 2, 2, 2, 1800.00, 1000.00, 1, 12, 1, 1, 1200),
     (33, 2, 3, 2, 3, 2, 2000.00, 1000.00, 1, 12, 1, 2, 1500);
+
+    insert into preference_user_link (user_id, preference_id) values (1,7);
+    insert into preference_user_link (user_id, preference_id) values (1,1);
+    insert into preference_user_link (user_id, preference_id) values (2,4);
+    insert into preference_user_link (user_id, preference_id) values (2,2);
 
   INSERT INTO user_listing_connection (
     listing_id, user_id, is_approved, connection_type
@@ -87,8 +98,11 @@ VALUES
     (30, 3),
     (31, 1),
     (32, 2),
-    (32, 3);
-    `);
+    (32, 3),
+    (33, 2),
+    (33, 3);
+    `
+  );
 };
 
 /**

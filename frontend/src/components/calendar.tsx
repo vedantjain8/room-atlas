@@ -157,9 +157,6 @@ const CalendarPage: React.FC<CalendarPageProps> = ({
               >
                 Add to google calendar
               </Button>
-              <Button onClick={() => console.log(senderid, receiverid)}>
-                yee
-              </Button>
             </a>
           </ModalFooter>
         </ModalBody>

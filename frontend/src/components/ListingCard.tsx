@@ -53,7 +53,9 @@ interface ListingCardProps {
   furnishing: number;
   available: boolean;
   amenities: string[];
+  isListing: boolean;
 }
+
 const ListingCard: React.FC<ListingCardProps> = ({
   id,
   title,
@@ -67,9 +69,10 @@ const ListingCard: React.FC<ListingCardProps> = ({
   furnishing,
   available,
   amenities,
+  isListing,
 }) => {
   return (
-    <a href={`/listing/${id}`}>
+    <a href={`/${isListing ? 'listing' : 'roommates'}/${id}`}>
       <Card
         className="transition-shadow rounded-lg w-full max-w-s active:bg-slate-200"
         style={{
@@ -78,7 +81,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         }}
         isPressable
       >
-        <CardHeader className="flex items-center justify-between p-4">
+        <CardHeader className="flex items-start justify-between p-4 h-20">
           <h4 className="font-semibold">{title}</h4>
         </CardHeader>
         <CardBody>

@@ -204,20 +204,20 @@ router.get("/", async (req, res) => {
     const result = await pool.query(query, values);
 
     // Cache the results in Redis
-    await redisClient.hSet(
-      "listings",
-      `roommate-listings-${offset}-${
-        offset + settings.database.limit
-      }-${filter_hash}`,
-      JSON.stringify(result.rows)
-    );
-    await redisClient.hExpire(
-      "listings",
-      `roommate-listings-${offset}-${
-        offset + settings.database.limit
-      }-${filter_hash}`,
-      settings.server.defaultCacheTimeout
-    );
+    // await redisClient.hSet(
+    //   "listings",
+    //   `roommate-listings-${offset}-${
+    //     offset + settings.database.limit
+    //   }-${filter_hash}`,
+    //   JSON.stringify(result.rows)
+    // );
+    // await redisClient.hExpire(
+    //   "listings",
+    //   `roommate-listings-${offset}-${
+    //     offset + settings.database.limit
+    //   }-${filter_hash}`,
+    //   settings.server.defaultCacheTimeout
+    // );
 
     return res
       .status(200)
@@ -402,6 +402,37 @@ router.post("/create", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error creating roommate listing:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/:id/roommatesdetail", async (req, res) => {
+  try {
+    const roomatesDetailsData = await pool.query(
+      `SELECT 
+        user_id 
+      FROM 
+        user_listing_connection ulc 
+      WHERE 
+        listing_id = $1 
+      AND 
+        connection_type = 'listing'
+      AND
+        is_approved = true`,
+      [req.params.id]
+    );
+
+    // Map user_id from rows to a promise that resolves user data
+    const userDataPromises = roomatesDetailsData.rows.map((element) =>
+      getUserData(element.user_id)
+    );
+
+    // Await all promises to resolve
+    const data = await Promise.all(userDataPromises);
+
+    return res.status(200).json({ message: data });
+  } catch (error) {
+    console.error("Error fetching roommate details:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
