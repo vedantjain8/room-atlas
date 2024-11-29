@@ -28,8 +28,6 @@ export default function UpdateListing({
     listing_state: "",
     listing_city: "",
     listing_address: "",
-    listing_latitude: "",
-    listing_longitude: "",
     listing_bedrooms: "",
     listing_bathroom: "",
     listing_furnishing: "",
@@ -84,8 +82,6 @@ export default function UpdateListing({
         listing_state: data.message.state,
         listing_city: data.message.city,
         listing_address: "", // Assuming address is not provided in the data
-        listing_latitude: "", // Assuming latitude is not provided in the data
-        listing_longitude: "", // Assuming longitude is not provided in the data
         listing_bedrooms: data.message.bedrooms.toString(),
         listing_bathroom: data.message.bathrooms.toString(),
         listing_furnishing: data.message.furnishing.toString(),

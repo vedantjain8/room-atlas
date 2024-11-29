@@ -29,14 +29,18 @@ async function feedbackCronJob() {
       ","
     )}`;
 
-    pool.query(query, async (err, result) => {
-      if (err) {
-        console.error("Error saving feedback to Database:", err);
-        return;
-      }
-      await redisClient.hDel("feedback", Object.keys(queue));
-      console.log("Feedback saved successfully");
-    });
+    try {
+      pool.query(query, async (err, result) => {
+        if (err) {
+          console.error("Error saving feedback to Database:", err);
+          return;
+        }
+        await redisClient.hDel("feedback", Object.keys(queue));
+        console.log("Feedback saved successfully");
+      });
+    } catch (error) {
+      console.error("Error saving feedback to Database:", error);
+    }
   }
 }
 

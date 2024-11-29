@@ -24,10 +24,6 @@ exports.up = (pgm) => {
 
   pgm.renameColumn("listing", "location", "area");
   pgm.alterColumn("listing", "area", { type: "varchar(200)" });
-  pgm.addColumn("listing", {
-    latitude: { type: "DECIMAL(8,5)", notNull: false }, // TODO: add notNull: true
-    longitude: { type: "DECIMAL(8,5)", notNull: false }, // TODO: add notNull: true
-  });
 };
 
 /**
@@ -39,5 +35,4 @@ exports.down = (pgm) => {
   pgm.dropTable("calendar");
   pgm.renameColumn("listing", "area", "location");
   pgm.alterColumn("listing", "location", { type: "text" });
-  pgm.dropColumns("listing", ["latitude", "longitude"]);
 };

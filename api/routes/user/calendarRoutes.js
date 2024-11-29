@@ -24,9 +24,7 @@ router.post("/new", async (req, res) => {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  let eventDescription = `${message ?? ""}
-  
-  Location: https://www.google.com/maps/search/21.15150934008922,+72.79589313405597`;
+  let eventDescription = `${message ?? ""}`;
 
   try {
     const senderUsername = await getUserData(senderid).username;

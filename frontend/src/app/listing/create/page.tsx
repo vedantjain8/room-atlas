@@ -23,8 +23,6 @@ const PostListing = () => {
     listing_state: "",
     listing_city: "",
     listing_address: "",
-    listing_latitude: "",
-    listing_longitude: "",
     listing_bedrooms: "",
     listing_bathroom: "",
     listing_furnishing: "",
@@ -57,8 +55,6 @@ const PostListing = () => {
     listing_state: "",
     listing_city: "",
     listing_address: "",
-    listing_latitude: "",
-    listing_longitude: "",
     listing_bedrooms: "",
     listing_bathroom: "",
     listing_furnishing: "",
@@ -185,8 +181,6 @@ const PostListing = () => {
             floor_no: formData.listing_floor_no,
             total_floors: formData.listing_total_floors,
             areasqft: formData.listing_areasqft,
-            latitude: formData.listing_latitude,
-            longitude: formData.listing_longitude,
           }),
         }
       );
@@ -245,20 +239,6 @@ const PostListing = () => {
 
     if (!formData.listing_address || formData.listing_address.trim() === "") {
       errors.listing_address = "Address is required";
-    }
-
-    if (
-      !formData.listing_latitude ||
-      isNaN(Number(formData.listing_latitude))
-    ) {
-      errors.listing_latitude = "Valid latitude is required";
-    }
-
-    if (
-      !formData.listing_longitude ||
-      isNaN(Number(formData.listing_longitude))
-    ) {
-      errors.listing_longitude = "Valid longitude is required";
     }
 
     if (
@@ -717,24 +697,6 @@ onChange={handleChange}
                         </option>
                       ))}
                     </select>
-                  </div>
-                </div>
-
-                <div className="flex w-full gap-2">
-                  <div className="flex w-full gap-2">
-                    <Input
-                      label="Latitude"
-                      id="listing_latitude"
-                      name="listing_latitude"
-                      onChange={handleChange}
-                    />
-
-                    <Input
-                      label="Longitude"
-                      id="listing_longitude"
-                      name="listing_longitude"
-                      onChange={handleChange}
-                    />
                   </div>
                 </div>
 

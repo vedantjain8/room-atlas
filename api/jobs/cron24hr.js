@@ -8,14 +8,18 @@ async function ImageLog2Database() {
     const element = all[key];
     const { userid, image_path, uploaded_on } = JSON.parse(element);
     const query = `INSERT INTO image_upload_log (user_id, image_path, uploaded_on) VALUES ($1, $2, $3)`;
-    await pool.query(query, [userid, image_path, uploaded_on], (err, res) => {
-      if (err) {
-        console.error(err);
-      } else {
-        redisClient.hDel("ImageUploadLog", key);
-      }
-    });
-    console.log("Image Upload Log cron job ran");
+    try {
+      pool.query(query, [userid, image_path, uploaded_on], (err, res) => {
+        if (err) {
+          console.error(err);
+        } else {
+          redisClient.hDel("ImageUploadLog", key);
+        }
+      });
+      console.log("Image Upload Log cron job ran");
+    } catch (err) {
+      console.error(`Error saving image upload log to Database: ${err}`);
+    }
   }
 }
 

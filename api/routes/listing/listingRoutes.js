@@ -361,7 +361,7 @@ router.post("/create", authenticateToken, async (req, res) => {
       await pool.query(amenitiesQuery, [listing_id, amenities_list]);
     }
 
-    await pool.query(
+    pool.query(
       "INSERT INTO listing_metadata VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
       [
         listing_id,
