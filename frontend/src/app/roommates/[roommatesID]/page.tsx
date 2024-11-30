@@ -431,7 +431,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
               }) => (
                 <div key={roommate.user_id} className="flex flex-col gap-2">
                   <div className="flex items-center gap-3">
-                    <Avatar src={roommate.avatar} />
+                    <Avatar src={`${process.env.NEXT_PUBLIC_HOSTNAME}${roommate.avatar}`} />
                     <h2>{roommate.username}</h2>
                   </div>
                   <div className="flex flex-col md:flex-row gap-2">

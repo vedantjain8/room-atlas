@@ -81,7 +81,7 @@ export default function ProfilePage() {
           prev ? { ...prev, avatar: data.response } : null
         );
       } else {
-        alert(data.response || "Failed to upload profile picture.");
+        alert(JSON.stringify(data.response) || "Failed to upload profile picture.");
       }
     } catch (error) {
       console.error(error);
@@ -168,14 +168,6 @@ export default function ProfilePage() {
             <p className="mt-2 text-gray-600">
               {userData.bio || "No bio provided"}
             </p>
-            <Button
-              className="mt-6"
-              onClick={() => {
-                redirect(`/chat?receiverId=${userData.user_id}`);
-              }}
-            >
-              Message
-            </Button>
             <p className="text-sm text-gray-500 mt-6">
               Joined on {new Date(userData.created_at).toLocaleDateString()}
             </p>

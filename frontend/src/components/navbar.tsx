@@ -16,7 +16,6 @@ function Navbar({ className }: { className?: string }) {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-    console.log(user);
   };
   return (
     <div
@@ -53,9 +52,8 @@ function Navbar({ className }: { className?: string }) {
             <Link href="/roommates">Roommates</Link>
             <Link href="/listing">Properties</Link>
             <Link href="/feedback">Feedback</Link>
-
           </div>
-          
+
           <div className="hidden md:flex justify-between items-center">
             <div className="flex gap-4 justify-end w-32 pl-2 pr-5 text-xl">
               <Link href="/listing/create">
@@ -63,7 +61,6 @@ function Navbar({ className }: { className?: string }) {
               </Link>
               {/* <Calendar strokeWidth={1.25} className="cursor-pointer" /> */}
               <Link href="/chat">
-                
                 <Send strokeWidth={1.5} className="cursor-pointer" />
               </Link>
               {/* <Bell strokeWidth={1.25} className="cursor-pointer" /> */}
@@ -80,7 +77,9 @@ function Navbar({ className }: { className?: string }) {
                   </button>
                 </Link>
                 <Link href="/profile">
-                  <Avatar/>
+                  <Avatar
+                    src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
+                  />
                 </Link>
               </div>
             ) : (
@@ -132,26 +131,28 @@ function Navbar({ className }: { className?: string }) {
                   </button>
                 </Link>
                 <Link href="/profile">
-                  <Avatar/>
+                  <Avatar
+                    src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
+                  />
                 </Link>
               </div>
             ) : (
               <div className="mt-4 flex flex-col space-y-2">
-                <Link href="/login" className="text-sky-700" onClick={toggleMenu}>
+                <Link
+                  href="/login"
+                  className="text-sky-700"
+                  onClick={toggleMenu}
+                >
                   Login
                 </Link>
                 <Link href="/register" onClick={toggleMenu}>
-                  <button
-                    className="relative inline-flex h-12 overflow-hidden rounded-full p-[1px] active:outline-none active:ring-2 active:ring-slate-400 active:ring-offset-2 active:ring-offset-slate-50 "
-                    
-                  >
+                  <button className="relative inline-flex h-12 overflow-hidden rounded-full p-[1px] active:outline-none active:ring-2 active:ring-slate-400 active:ring-offset-2 active:ring-offset-slate-50 ">
                     <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
                     <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-50 px-3 py-1 text-sm font-medium text-black backdrop-blur-3xl">
                       <h1>Sign Up</h1>
                     </span>
                   </button>
                 </Link>
-                
               </div>
             )}
           </div>

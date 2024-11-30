@@ -36,7 +36,7 @@ const createDirectory = (directoryPath) => {
 
 const publicFolder = path.join(__dirname, "public");
 createDirectory(path.join(publicFolder, "assets", "upload", "images"));
-createDirectory(path.join(publicFolder, "assets", "upload", "profiles"));
+createDirectory(path.join(publicFolder, "assets", "upload", "profile"));
 
 // cron jobs
 require("./jobs/cron24hr");

@@ -69,10 +69,7 @@ router.post(
       if (!buffer) {
         return res.status(400).json({ response: "No image uploaded" });
       }
-      const ref = `${require("crypto")
-        .createHash("md5")
-        .update(userid)
-        .digest("hex")}.webp`;
+      const ref = `${userid}.webp`;
       // Convert and save low-quality image
       await sharp(buffer)
         .webp({ quality: 20 })

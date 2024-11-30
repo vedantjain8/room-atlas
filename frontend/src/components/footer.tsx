@@ -1,8 +1,4 @@
-// components/Footer.tsx
-
 "use client";
-
-import { Button } from "@nextui-org/react";
 import {
   Facebook,
   Twitter,
@@ -29,22 +25,34 @@ const Footer = () => {
           <h3 className="text-lg font-medium text-white">Quick Links</h3>
           <ul className="mt-4 space-y-2">
             <li>
-              <a href="/about" className="text-gray-400 hover:text-gray-100">
+              <a
+                // href="/about"
+                className="text-gray-400 hover:text-gray-100"
+              >
                 About Us
               </a>
             </li>
             <li>
-              <a href="/services" className="text-gray-400 hover:text-gray-100">
+              <a
+                // href="/services"
+                className="text-gray-400 hover:text-gray-100"
+              >
                 Services
               </a>
             </li>
             <li>
-              <a href="/blog" className="text-gray-400 hover:text-gray-100">
+              <a
+                // href="/blog"
+                className="text-gray-400 hover:text-gray-100"
+              >
                 Blog
               </a>
             </li>
             <li>
-              <a href="/contact" className="text-gray-400 hover:text-gray-100">
+              <a
+                // href="/contact"
+                className="text-gray-400 hover:text-gray-100"
+              >
                 Contact Us
               </a>
             </li>
@@ -71,7 +79,7 @@ const Footer = () => {
           <h3 className="text-lg font-medium text-white">Follow Us</h3>
           <div className="flex mt-4 gap-4">
             <a
-              href="https://facebook.com"
+              // href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-gray-100"
@@ -79,7 +87,7 @@ const Footer = () => {
               <Facebook size={20} />
             </a>
             <a
-              href="https://twitter.com"
+              // href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-gray-100"
@@ -87,7 +95,7 @@ const Footer = () => {
               <Twitter size={20} />
             </a>
             <a
-              href="https://instagram.com"
+              // href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-gray-100"
@@ -95,7 +103,7 @@ const Footer = () => {
               <Instagram size={20} />
             </a>
             <a
-              href="https://linkedin.com"
+              // href="https://linkedin.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-gray-100"

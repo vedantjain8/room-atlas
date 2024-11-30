@@ -1,5 +1,6 @@
 "use client";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { Button } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 
 export default function ProfilePage({
@@ -31,7 +32,7 @@ export default function ProfilePage({
   }
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !params.username) return;
     fetch(
       `${process.env.NEXT_PUBLIC_HOSTNAME}/user/profile/${params.username}`,
       {
@@ -47,7 +48,7 @@ export default function ProfilePage({
         setUserData(data.message);
         setLoading(false);
       });
-  }, [token]);
+  }, [token, params.username]);
 
   if (isLoading) return <p className="text-center mt-10">Loading...</p>;
   if (!userData) return <p className="text-center mt-10">No profile data</p>;
@@ -112,7 +113,14 @@ export default function ProfilePage({
             <p className="text-sm text-gray-500 mt-6">
               Joined on {new Date(userData.created_at).toLocaleDateString()}
             </p>
-            {/* TODO: add chat btn */}
+            <Button
+              className="mt-6"
+              onClick={() => {
+                window.location.href = `/chat?receiverId=${userData.user_id}`;
+              }}
+            >
+              Message
+            </Button>
           </div>
         </div>
       </div>
