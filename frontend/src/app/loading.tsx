@@ -7,7 +7,7 @@ export default function Loading() {
   return (
     <div className={styles.container}>
       <div className={styles.spinner}></div>
-      <p className={styles.message}>Hold tight, we're loading your content...</p>
+      <p className={styles.message}>Hold tight, we&apos;re loading your content...</p>
     </div>
   );
 }

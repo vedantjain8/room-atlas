@@ -306,7 +306,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
           <Button
             className="bg-gradient-to-br from-sky-500 to-blue-700 text-white text-xs md:text-base"
             onClick={() => {
-              redirect(`/chat?receiverId=${listingData.uploaded_by}`);
+              window.location.href = `/chat?receiverId=${listingData.uploaded_by}`;
             }}
           >
             <Send strokeWidth={1.5} />
@@ -401,7 +401,10 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
         </div>
 
         {reviewData.map((review: any, index: number) => (
-          <div className="flex flex-row p-4 border-1 border-sky-600 rounded-lg w-full mt-6 gap-4">
+          <div
+            className="flex flex-row p-4 border-1 border-sky-600 rounded-lg w-full mt-6 gap-4"
+            key={index}
+          >
             <div className="flex gap-4 items-start">
               <Avatar
                 src={`${process.env.NEXT_PUBLIC_HOSTNAME}${review.user.avatar}`}

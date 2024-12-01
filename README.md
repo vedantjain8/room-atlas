@@ -96,7 +96,9 @@ Find the perfect match for your living space with advanced search filters, real-
 ---
 
 ## 🖼️ **Screenshots**
-
+![Home Page](https://github.com/vedantjain8/room-atlas/blob/master/doc/screenshot/screenshot1.png)
+![Listing Page](https://github.com/vedantjain8/room-atlas/blob/master/doc/screenshot/screenshot2.png)
+![Chat Interface](https://github.com/vedantjain8/room-atlas/blob/master/doc/screenshot/screenshot3.png)
 ---
 
 ## **Team Members**👨‍💻👩‍💻

@@ -435,8 +435,8 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
                     <h2>{roommate.username}</h2>
                   </div>
                   <div className="flex flex-col md:flex-row gap-2">
-                    {roommate.preferences?.split(",").map((pr) => (
-                      <div className="bg-sky-600 text-white rounded-lg p-2">
+                    {roommate.preferences?.split(",").map((pr, index) => (
+                      <div className="bg-sky-600 text-white rounded-lg p-2" key={index}>
                         {" "}
                         <p>{pr}</p>
                       </div>
@@ -471,7 +471,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
         </div>
 
         {reviewData.map((review: any, index: number) => (
-          <div className="flex flex-row p-4 border-1 border-sky-600 rounded-lg w-full mt-6 gap-4">
+          <div className="flex flex-row p-4 border-1 border-sky-600 rounded-lg w-full mt-6 gap-4" key={index}>
             <div className="flex gap-4 items-start">
               <Avatar
                 src={`${process.env.NEXT_PUBLIC_HOSTNAME}${review.user.avatar}`}

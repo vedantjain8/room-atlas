@@ -7,6 +7,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import CalendarPage from "@/components/calendar";
 import { Input } from "@nextui-org/react";
 import Link from "next/link";
+import Image from "next/image";
 
 const socket = io(`${process.env.NEXT_PUBLIC_HOSTNAME}`, {
   autoConnect: false, // Prevent auto-connection before user authentication
@@ -168,7 +169,10 @@ export default function ChatPage() {
                 }}
               >
                 <div className="flex items-center space-x-3">
-                  <img
+                  <Image
+                    width="0"
+                    height="0"
+                    sizes="100vw"
                     src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
                     alt={`User ${user.user_id}`}
                     className="w-10 h-10 rounded-full"

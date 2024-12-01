@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { Button } from "@nextui-org/react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function ProfilePage({
@@ -58,10 +59,13 @@ export default function ProfilePage({
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
         <div className="flex flex-col md:flex-row items-center">
           <div className="w-full md:w-1/3  p-6 flex flex-col items-center">
-            <img
+            <Image
               src={`${process.env.NEXT_PUBLIC_HOSTNAME}${userData.avatar}`}
               alt={`${userData.username}'s avatar`}
               className="w-32 h-32 rounded-full border-4 border-white shadow-md"
+              width="0"
+              height="0"
+              sizes="100vw"
             />
             <h2 className="mt-4  text-2xl font-semibold">
               {userData.username}
