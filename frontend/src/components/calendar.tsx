@@ -31,13 +31,13 @@ const CalendarPage: React.FC<CalendarPageProps> = ({
   let url;
   const socket = io(`${process.env.NEXT_PUBLIC_HOSTNAME}`);
   const [dateState, setDateState] = useState<ZonedDateTime>(
-    now(getLocalTimeZone())
+    now(getLocalTimeZone()),
   );
 
   async function fetchAndAddDisabledRanges() {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/calendar/busy/${receiverid}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/calendar/busy/${receiverid}`,
       ); // Replace with your actual API endpoint
       if (!response.ok) {
         throw new Error("Failed to fetch event data");
@@ -48,11 +48,11 @@ const CalendarPage: React.FC<CalendarPageProps> = ({
         (event: { event_start_date: string }) => {
           const eventStartDate = parseAbsolute(
             event.event_start_date,
-            getLocalTimeZone()
+            getLocalTimeZone(),
           );
           const eventEndDate = eventStartDate.add({ hours: 2 }); // Example: Adding 2 hours as an end time
           return [eventStartDate, eventEndDate];
-        }
+        },
       );
 
       // Add the fetched date ranges to `disabledRanges`
@@ -78,7 +78,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({
     if (disabledRanges.length === 0) return false;
     return disabledRanges.some(
       (interval) =>
-        date.compare(interval[0]) >= 0 && date.compare(interval[1]) <= 0
+        date.compare(interval[0]) >= 0 && date.compare(interval[1]) <= 0,
     );
   };
 
@@ -134,11 +134,11 @@ const CalendarPage: React.FC<CalendarPageProps> = ({
                           receiverid,
                           message: (
                             document.getElementById(
-                              "Description"
+                              "Description",
                             ) as HTMLInputElement
                           ).value,
                         }),
-                      }
+                      },
                     );
 
                     const data = await response.json();
@@ -150,7 +150,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({
                   } catch (error) {
                     console.error(
                       "Error fetching or processing event data:",
-                      error
+                      error,
                     );
                   }
                 }}

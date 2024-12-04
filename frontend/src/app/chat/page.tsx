@@ -54,14 +54,14 @@ export default function ChatPage() {
     user && receiverId
       ? `${process.env.NEXT_PUBLIC_HOSTNAME}/chat/chat-history/${user.user_id}/${receiverId}`
       : null,
-    fetcher
+    fetcher,
   );
 
   const { data: fetchPeopleChatList } = useSWR(
     user
       ? `${process.env.NEXT_PUBLIC_HOSTNAME}/chat/people/${user.user_id}`
       : null,
-    fetcher
+    fetcher,
   );
 
   useEffect(() => {

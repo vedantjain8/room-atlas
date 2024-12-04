@@ -72,7 +72,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
   isListing,
 }) => {
   return (
-    <a href={`/${isListing ? 'listing' : 'roommates'}/${id}`}>
+    <a href={`/${isListing ? "listing" : "roommates"}/${id}`}>
       <Card
         className="transition-shadow rounded-lg w-full max-w-s active:bg-slate-200"
         style={{

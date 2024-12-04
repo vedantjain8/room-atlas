@@ -19,7 +19,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "calendar",
     "unique_event_user_pair",
-    "UNIQUE(user1_id, user2_id, event_start_date)"
+    "UNIQUE(user1_id, user2_id, event_start_date)",
   );
 
   pgm.renameColumn("listing", "location", "area");

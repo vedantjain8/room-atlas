@@ -22,7 +22,7 @@ function Navbar({ className }: { className?: string }) {
       className={cn(
         "sticky top-0 inset-x-0 max-w-full mx-auto z-50 border-b-2 border-slate-600",
         // "fixed top-0 inset-x-0 max-w-full mx-auto z-50 border-b-2 border-slate-600",
-        className
+        className,
       )}
     >
       <Menu setActive={setActive}>

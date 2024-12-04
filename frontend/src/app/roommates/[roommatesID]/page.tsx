@@ -42,7 +42,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
   const shareData = {
     title: "Room Atlas",
     text: "Get the best homes ever",
-    url: "http://localhost:3000",
+    url: `${process.env.FRONTEND_HOSTNAME}/roommates/${roommateID}`,
   };
 
   const shareHandler = async () => {
@@ -63,7 +63,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
   async function fetchOwnerDetails(ownerID: string) {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/user/${ownerID}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/user/${ownerID}`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -76,7 +76,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
   async function fetchData(id: string) {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/roommate/${id}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/roommate/${id}`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -93,7 +93,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
   async function fetchRoommates() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/roommate/${roommateID}/roommatesdetail`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/roommate/${roommateID}/roommatesdetail`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -106,7 +106,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
   async function fetchStats() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${roommateID}/stats`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${roommateID}/stats`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -123,7 +123,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
         `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${roommateID}/like`,
         {
           method: "POST",
-        }
+        },
       );
 
       if (response.ok) {
@@ -137,7 +137,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
   async function fetchReview() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/review/${roommateID}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/review/${roommateID}`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -162,7 +162,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
             listing_id: roommateID,
             user_id: user.user_id,
           }),
-        }
+        },
       );
       if (!response.ok) {
         const errorData = await response.json();
@@ -267,7 +267,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
                       headers: {
                         Authorization: `${token}`,
                       },
-                    }
+                    },
                   );
                   setCookie(`listing_${roommateID}_like`, "true");
 
@@ -372,7 +372,7 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
                     headers: {
                       Authorization: `${token}`,
                     },
-                  }
+                  },
                 );
                 setCookie(`listing_${roommateID}_like`, "true");
 
@@ -431,19 +431,24 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
               }) => (
                 <div key={roommate.user_id} className="flex flex-col gap-2">
                   <div className="flex items-center gap-3">
-                    <Avatar src={`${process.env.NEXT_PUBLIC_HOSTNAME}${roommate.avatar}`} />
+                    <Avatar
+                      src={`${process.env.NEXT_PUBLIC_HOSTNAME}${roommate.avatar}`}
+                    />
                     <h2>{roommate.username}</h2>
                   </div>
                   <div className="flex flex-col md:flex-row gap-2">
                     {roommate.preferences?.split(",").map((pr, index) => (
-                      <div className="bg-sky-600 text-white rounded-lg p-2" key={index}>
+                      <div
+                        className="bg-sky-600 text-white rounded-lg p-2"
+                        key={index}
+                      >
                         {" "}
                         <p>{pr}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-              )
+              ),
             )
           ) : (
             <p>No roommates available.</p>
@@ -471,7 +476,10 @@ function ListingDetails({ params }: { params: { roommatesID: string } }) {
         </div>
 
         {reviewData.map((review: any, index: number) => (
-          <div className="flex flex-row p-4 border-1 border-sky-600 rounded-lg w-full mt-6 gap-4" key={index}>
+          <div
+            className="flex flex-row p-4 border-1 border-sky-600 rounded-lg w-full mt-6 gap-4"
+            key={index}
+          >
             <div className="flex gap-4 items-start">
               <Avatar
                 src={`${process.env.NEXT_PUBLIC_HOSTNAME}${review.user.avatar}`}

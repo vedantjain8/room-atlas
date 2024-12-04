@@ -56,15 +56,16 @@ app.use(
       "http://127.0.0.1:5500",
       "http://localhost:3000",
       "http://localhost:3100",
+      `${process.env.FRONTEND_URL || ""}`,
     ],
-  })
+  }),
 );
 
 // console logging
 app.use(
   morgan(
-    ":date[web] :remote-addr  :method :url :status - :response-time ms :res[content-length]"
-  )
+    ":date[web] :remote-addr  :method :url :status - :response-time ms :res[content-length]",
+  ),
 );
 
 // routes for different modules
@@ -92,7 +93,10 @@ app.get("/ping", (req, res) => {
 
 const io = socketio(server, {
   cors: {
-    origin: "http://localhost:3000", // Make sure this is the origin of your frontend
+    origin: [
+      "http://localhost:3000",
+      `${process.env.FRONTEND_URL || ""}`,
+    ], // Make sure this is the origin of your frontend
     methods: ["GET", "POST"],
   },
 });

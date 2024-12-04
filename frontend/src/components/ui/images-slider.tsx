@@ -26,13 +26,13 @@ export const ImagesSlider = ({
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex + 1 === images.length ? 0 : prevIndex + 1
+      prevIndex + 1 === images.length ? 0 : prevIndex + 1,
     );
   };
 
   const handlePrevious = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex - 1 < 0 ? images.length - 1 : prevIndex - 1
+      prevIndex - 1 < 0 ? images.length - 1 : prevIndex - 1,
     );
   };
 
@@ -120,7 +120,7 @@ export const ImagesSlider = ({
     <div
       className={cn(
         "overflow-hidden h-full w-full relative flex items-center justify-center",
-        className
+        className,
       )}
       style={{
         perspective: "1000px",
@@ -129,7 +129,10 @@ export const ImagesSlider = ({
       {areImagesLoaded && children}
       {areImagesLoaded && overlay && (
         <div
-          className={cn("absolute inset-0 bg-transparent z-40", overlayClassName)}
+          className={cn(
+            "absolute inset-0 bg-transparent z-40",
+            overlayClassName,
+          )}
         />
       )}
 

@@ -23,8 +23,6 @@ import {
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/app/contexts/AuthContext";
-import { redirect } from "next/navigation";
-// import imageflat from 'room-atlas/frontend/src/app/images/flat_image.png';
 
 function ListingDetails({ params }: { params: { listingID: string } }) {
   const { token, user } = useAuth();
@@ -40,7 +38,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   const shareData = {
     title: "Room Atlas",
     text: "Get the best homes ever",
-    url: "http://localhost:3000",
+    url: `${process.env.FRONTEND_HOSTNAME}/listing/${listingID}`,
   };
 
   const shareHandler = async () => {
@@ -61,7 +59,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   async function fetchData(id: string) {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${id}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${id}`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -78,7 +76,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   async function fetchOwnerDetails(ownerID: string) {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/user/${ownerID}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/user/${ownerID}`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -91,7 +89,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   async function fetchStats() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${listingID}/stats`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${listingID}/stats`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -105,7 +103,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
   async function fetchReview() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/review/${listingID}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/review/${listingID}`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -130,7 +128,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
             listing_id: listingID,
             user_id: user.user_id,
           }),
-        }
+        },
       );
       if (!response.ok) {
         const errorData = await response.json();
@@ -233,7 +231,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
                       headers: {
                         Authorization: `${token}`,
                       },
-                    }
+                    },
                   );
                   setCookie(`listing_${listingID}_like`, "true");
 
@@ -337,7 +335,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
                     headers: {
                       Authorization: `${token}`,
                     },
-                  }
+                  },
                 );
                 setCookie(`listing_${listingID}_like`, "true");
 

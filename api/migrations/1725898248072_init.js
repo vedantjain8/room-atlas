@@ -90,7 +90,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "preference_listing",
     "unique_preference_listing",
-    "UNIQUE (listing_id, preference_id)"
+    "UNIQUE (listing_id, preference_id)",
   );
 
   pgm.createTable("amenities", {
@@ -107,7 +107,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "listing_amenities",
     "unique_listing_amenity",
-    "UNIQUE (listing_id, amenity_id)"
+    "UNIQUE (listing_id, amenity_id)",
   );
 
   pgm.createTable("listing_metadata", {
@@ -142,7 +142,7 @@ exports.up = (pgm) => {
       VALUES (NEW.listing_id);
       RETURN NEW;
     END;
-    `
+    `,
   );
 
   pgm.createTrigger("listing", "listing_stats_insert_trigger", {
@@ -166,7 +166,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "report",
     "unique_report",
-    "UNIQUE (reported_by, listing_id)"
+    "UNIQUE (reported_by, listing_id)",
   );
 
   pgm.createTable("messages", {
@@ -197,7 +197,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "user_ratings",
     "unique_user_ratings",
-    "UNIQUE (user_id, rated_by)"
+    "UNIQUE (user_id, rated_by)",
   );
 
   pgm.createTable("listing_review", {
@@ -216,7 +216,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "listing_review",
     "unique_listing_reviews",
-    "UNIQUE (user_id, listing_id)"
+    "UNIQUE (user_id, listing_id)",
   );
 
   pgm.createTable("image_upload_log", {

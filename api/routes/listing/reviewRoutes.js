@@ -19,7 +19,7 @@ router.post("/create", authenticateToken, async (req, res) => {
   try {
     await pool.query(
       "INSERT INTO listing_review (listing_id, review, user_id) VALUES ($1, $2, $3)",
-      [listing_id, review, user_id]
+      [listing_id, review, user_id],
     );
     await redisClient.hDel("listing_reviews", listing_id);
   } catch (error) {
@@ -45,7 +45,7 @@ router.get("/:listing_id", async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT review, user_id FROM listing_review WHERE listing_id = $1",
-      [listing_id]
+      [listing_id],
     );
 
     const reviews = result.rows;
@@ -55,7 +55,7 @@ router.get("/:listing_id", async (req, res) => {
     const allUserData = await Promise.all(
       allUserIds.map(async (id) => {
         return await getUserData(id);
-      })
+      }),
     );
 
     const enrichedReviews = reviews.map((review, index) => ({
@@ -68,7 +68,7 @@ router.get("/:listing_id", async (req, res) => {
     await redisClient.hSet(
       "listing_reviews",
       listing_id,
-      JSON.stringify(reviewData)
+      JSON.stringify(reviewData),
     );
 
     return res.status(200).json({ message: reviewData });

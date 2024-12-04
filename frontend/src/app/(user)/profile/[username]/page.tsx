@@ -42,7 +42,7 @@ export default function ProfilePage({
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     )
       .then((res) => res.json())
       .then((data) => {

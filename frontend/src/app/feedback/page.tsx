@@ -10,7 +10,7 @@ export default function FeedbackForm() {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFeedbackData((prev) => ({ ...prev, [name]: value }));
@@ -29,7 +29,7 @@ export default function FeedbackForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(feedbackData),
-        }
+        },
       );
 
       if (data.status === 200) {

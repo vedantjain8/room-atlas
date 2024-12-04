@@ -20,10 +20,12 @@ async function getRefreshToken(userID) {
   try {
     const result = await pool.query(
       `SELECT token FROM refreshtoken WHERE userid = $1`,
-      [userID]
+      [userID],
     );
     const token = result.rows[0];
-    if (!token) {throw new Error("Token not found"); };
+    if (!token) {
+      throw new Error("Token not found");
+    }
     return token.token;
   } catch (err) {
     console.error(err);

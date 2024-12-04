@@ -3,7 +3,6 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { ProfileUpload } from "@/components/ui/profile-upload";
 import { Button } from "@nextui-org/react";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
@@ -70,7 +69,7 @@ export default function ProfilePage() {
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
+        },
       );
 
       const data = await response.json();
@@ -79,10 +78,12 @@ export default function ProfilePage() {
         alert("Profile picture uploaded successfully.");
         // Update the avatar URL in the profile
         setUserData((prev) =>
-          prev ? { ...prev, avatar: data.response } : null
+          prev ? { ...prev, avatar: data.response } : null,
         );
       } else {
-        alert(JSON.stringify(data.response) || "Failed to upload profile picture.");
+        alert(
+          JSON.stringify(data.response) || "Failed to upload profile picture.",
+        );
       }
     } catch (error) {
       console.error(error);

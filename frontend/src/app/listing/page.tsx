@@ -94,7 +94,7 @@ const ListingsPage: React.FC = () => {
   const fetchAmenities = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/amenities`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/amenities`,
       );
       const data = await response.json();
       setAmenities(data.message || []);
@@ -106,7 +106,7 @@ const ListingsPage: React.FC = () => {
   const fetchPreferences = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/preferences`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/preferences`,
       );
       const data = await response.json();
       setPreferences(data.message || []);
@@ -164,7 +164,6 @@ const ListingsPage: React.FC = () => {
       // Clear cities if no state is selected
       setCities([]);
     }
-    
   }, [selectedState]);
 
   if (error)
@@ -371,7 +370,7 @@ const ListingsPage: React.FC = () => {
                     >
                       {amenity.amenity_name}
                     </Checkbox>
-                  )
+                  ),
                 )}
               </CheckboxGroup>
             </div>
@@ -399,7 +398,7 @@ const ListingsPage: React.FC = () => {
                     >
                       {preference.preference}
                     </Checkbox>
-                  )
+                  ),
                 )}
               </CheckboxGroup>
             </div>

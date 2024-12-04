@@ -102,7 +102,7 @@ const ListingsPage: React.FC = () => {
   const fetchAmenities = async () => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/amenities`,
-      { method: "GET" }
+      { method: "GET" },
     );
     const data = await response.json();
     setAmenities(data.message || []);
@@ -111,7 +111,7 @@ const ListingsPage: React.FC = () => {
   const fetchPreferences = async () => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/preferences`,
-      { method: "GET" }
+      { method: "GET" },
     );
     const data = await response.json();
     setPreferences(data.message || []);
@@ -355,7 +355,7 @@ const ListingsPage: React.FC = () => {
                       >
                         {amenity.amenity_name}
                       </Checkbox>
-                    )
+                    ),
                   )}
                 </CheckboxGroup>
               </div>

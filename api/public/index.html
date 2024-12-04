@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -50,11 +50,11 @@
       // Load chat history when the page loads
       window.onload = async () => {
         const response = await fetch(
-          `/chat/chat-history/${currentUserId}/${currentReceiverId}`
+          `/chat/chat-history/${currentUserId}/${currentReceiverId}`,
         );
         const messages = await response.json();
         messages.forEach((message) => {
-            console.log(message)
+          console.log(message);
           const msgText =
             message.sender_id == currentUserId
               ? "You: "

@@ -33,7 +33,7 @@ async function redisCheckUsername(username) {
 
     const postgresResult = await pool.query(
       "SELECT EXISTS (SELECT * FROM users WHERE username = lower($1))",
-      [username]
+      [username],
     );
     if (postgresResult.rows[0].exists) {
       await redisClient.sAdd("usernames", username);
@@ -134,7 +134,7 @@ router.post("/register", async (req, res) => {
         city,
         state,
         emailVerified ?? false,
-      ]
+      ],
     );
 
     const user_id = userData.rows[0].user_id;
@@ -144,7 +144,7 @@ router.post("/register", async (req, res) => {
 
     await pool.query(
       "INSERT INTO refresh_token(user_id, token) values ($1, $2)",
-      [user_id, refreshToken]
+      [user_id, refreshToken],
     );
     return res.status(200).json({
       message: "user account created successfully",
@@ -210,7 +210,7 @@ router.post("/login", async (req, res) => {
       await redisClient.hSet(`userLookup`, identifier, user_id);
       await redisClient.expire(
         `userLookup`,
-        settings.server.defaultCacheTimeout
+        settings.server.defaultCacheTimeout,
       );
     }
 
@@ -234,7 +234,7 @@ router.post("/login", async (req, res) => {
 router.get("/securityQuestions", async (req, res) => {
   try {
     const securityQuestions = await pool.query(
-      "SELECT question from security_questions"
+      "SELECT question from security_questions",
     );
     return res.status(200).json(securityQuestions.rows.map((q) => q.question));
   } catch (err) {

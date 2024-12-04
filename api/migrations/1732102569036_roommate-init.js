@@ -48,7 +48,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "preference_user_link",
     "unique_preference_user",
-    "UNIQUE (user_id, preference_id)"
+    "UNIQUE (user_id, preference_id)",
   );
 
   pgm.sql(`
@@ -101,8 +101,7 @@ VALUES
     (32, 3),
     (33, 2),
     (33, 3);
-    `
-  );
+    `);
 };
 
 /**

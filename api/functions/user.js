@@ -41,7 +41,7 @@ async function getUserData(user_idArgs, reload = false) {
       GROUP BY 
         users.user_id, users.username, users.avatar, users.bio, users.city, users.state
         `,
-      [user_id]
+      [user_id],
     );
 
     if (userResult.rows.length === 0) {
@@ -54,7 +54,7 @@ async function getUserData(user_idArgs, reload = false) {
     await redisClient.hExpire(
       "userData",
       user_id,
-      settings.server.defaultCacheTimeout
+      settings.server.defaultCacheTimeout,
     );
     // await redisClient.set(`userData:${user_id}`, JSON.stringify(userData));
     // await redisClient.expire(`userData:${user_id}`, settings.server.defaultCacheTimeout);

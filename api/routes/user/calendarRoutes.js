@@ -10,7 +10,7 @@ router.get("/busy/:receiverid", async (req, res) => {
   const receiverid = req.params.receiverid;
   const result = await pool.query(
     "SELECT event_start_date FROM calendar WHERE user2_id=$1",
-    [receiverid]
+    [receiverid],
   );
 
   const data = result.rows;
@@ -39,7 +39,7 @@ router.post("/new", async (req, res) => {
       date.month,
       date.day,
       date.hour,
-      date.minute
+      date.minute,
     );
     endDate.setHours(endDate.getHours() + 1);
     const eventEndDate = convertToUTC({
@@ -52,7 +52,7 @@ router.post("/new", async (req, res) => {
 
     await pool.query(
       "INSERT INTO calendar (user1_id, user2_id, event_start_date) VALUES ($1, $2, $3)",
-      [senderid, receiverid, eventStartDate]
+      [senderid, receiverid, eventStartDate],
     );
 
     url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDescription}&location=&dates=${eventStartDate}%2F${eventEndDate}`;

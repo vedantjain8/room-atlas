@@ -15,7 +15,6 @@ import {
 } from "@nextui-org/react";
 
 import { ArrowRight, CircleAlert, Send } from "lucide-react";
-import { redirect } from "next/navigation";
 
 export default function RegisterForm() {
   const [page, setPage] = useState(1); // set this to 2 to see page 2
@@ -163,7 +162,7 @@ export default function RegisterForm() {
         if (response.status === 200) {
           // TODO: add a provider for toast messages
           // pass the success message to the toast provider
-          redirect("/login");
+          window.location.href = "/login";
         } else {
           alert(data.message || "Error registering user");
         }
@@ -203,7 +202,7 @@ export default function RegisterForm() {
       {
         method: "GET",
         cache: "force-cache",
-      }
+      },
     );
 
     const questions = await questionsList.json();

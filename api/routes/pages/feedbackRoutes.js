@@ -15,7 +15,11 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 
   try {
-    await redisClient.hSet("feedback", `${req.user.userID}|${new Date()}`, JSON.stringify({ email, message }));
+    await redisClient.hSet(
+      "feedback",
+      `${req.user.userID}|${new Date()}`,
+      JSON.stringify({ email, message }),
+    );
 
     return res.status(201).json({ message: "Feedback submitted successfully" });
   } catch (error) {

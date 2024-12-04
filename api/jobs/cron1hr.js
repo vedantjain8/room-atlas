@@ -20,13 +20,13 @@ async function feedbackCronJob() {
     const user_id = key.split("|")[0];
     const created_at = new Date(key.split("|")[1]).toISOString();
     insertParams.push(
-      `('${user_id}', '${email}', '${message}', '${created_at}')`
+      `('${user_id}', '${email}', '${message}', '${created_at}')`,
     );
   }
 
   if (insertParams.length > 0) {
     const query = `INSERT INTO feedback (user_id, email, message, created_at) VALUES ${insertParams.join(
-      ","
+      ",",
     )}`;
 
     try {
@@ -86,17 +86,17 @@ async function updateStats() {
     const queryParts = [];
     if (cases.views.length > 0) {
       queryParts.push(
-        `views = CASE listing_id ${cases.views.join(" ")} ELSE views END`
+        `views = CASE listing_id ${cases.views.join(" ")} ELSE views END`,
       );
     }
     if (cases.likes.length > 0) {
       queryParts.push(
-        `likes = CASE listing_id ${cases.likes.join(" ")} ELSE likes END`
+        `likes = CASE listing_id ${cases.likes.join(" ")} ELSE likes END`,
       );
     }
     if (cases.shares.length > 0) {
       queryParts.push(
-        `shares = CASE listing_id ${cases.shares.join(" ")} ELSE shares END`
+        `shares = CASE listing_id ${cases.shares.join(" ")} ELSE shares END`,
       );
     }
 

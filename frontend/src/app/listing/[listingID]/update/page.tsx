@@ -47,7 +47,7 @@ export default function UpdateListing({
   const fetchAmenities = async () => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/amenities`,
-      { method: "GET" }
+      { method: "GET" },
     );
     const data = await response.json();
     setAmenities(data.message || []);
@@ -56,7 +56,7 @@ export default function UpdateListing({
   const fetchPreferences = async () => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/preferences`,
-      { method: "GET" }
+      { method: "GET" },
     );
     const data = await response.json();
     setPreferences(data.message || []);
@@ -70,7 +70,7 @@ export default function UpdateListing({
   async function fetchData() {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${params.listingID}`
+        `${process.env.NEXT_PUBLIC_HOSTNAME}/listing/${params.listingID}`,
       );
       if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
       const data = await res.json();
@@ -112,7 +112,7 @@ export default function UpdateListing({
           Authorization: `${token}`,
         },
         body: JSON.stringify(formData),
-      }
+      },
     );
     const data = await response.json();
     console.log(data);
@@ -304,7 +304,7 @@ export default function UpdateListing({
                           >
                             {amenity.amenity_name}
                           </Checkbox>
-                        )
+                        ),
                       )}
                     </CheckboxGroup>
                   </div>
@@ -332,7 +332,7 @@ export default function UpdateListing({
                           >
                             {preference.preference}
                           </Checkbox>
-                        )
+                        ),
                       )}
                     </CheckboxGroup>
                   </div>

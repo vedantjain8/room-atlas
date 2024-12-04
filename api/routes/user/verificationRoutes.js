@@ -15,11 +15,9 @@ router.post("/email", async (req, res) => {
   const _redisEmail = await redisClient.get(email);
   if (_redisEmail) {
     const ttl = await redisClient.ttl(email);
-    return res
-      .status(400)
-      .json({
-        message: `OTP already sent, wait for ${ttl} seconds before trying again `,
-      });
+    return res.status(400).json({
+      message: `OTP already sent, wait for ${ttl} seconds before trying again `,
+    });
   }
   const otp = Math.floor(100000 + Math.random() * 900000); // 6 digit otp
   await redisClient.hSet("OTPqueue", email, otp);

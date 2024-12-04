@@ -25,7 +25,7 @@ export const ProfileUpload = ({
       }
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
         setError(
-          `"${file.name}" exceeds the ${MAX_FILE_SIZE_MB} MB size limit.`
+          `"${file.name}" exceeds the ${MAX_FILE_SIZE_MB} MB size limit.`,
         );
         continue;
       }
@@ -85,7 +85,7 @@ export const ProfileUpload = ({
                   layoutId={idx === 0 ? "file-upload" : "file-upload-" + idx}
                   className={cn(
                     "relative overflow-hidden z-40 bg-white dark:bg-neutral-900 flex flex-col items-start justify-start md:h-24 p-4 mt-4 w-full mx-auto rounded-md",
-                    "shadow-sm"
+                    "shadow-sm",
                   )}
                 >
                   <div className="flex justify-between w-full items-center gap-4">
@@ -153,7 +153,7 @@ export function GridPattern() {
               }`}
             />
           );
-        })
+        }),
       )}
     </div>
   );

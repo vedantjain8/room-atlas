@@ -106,7 +106,7 @@ Find the perfect match for your living space with advanced search filters, real-
 | Name |  
 |--------------------|
 | **[Vedant Jain](https://github.com/vedantjain8)**|  
-| **[Adityan Nain](https://github.com/adityannair007)**| 
+| **[Adityan Nair](https://github.com/adityannair007)**| 
 | **[Disha Kumbhar](https://github.com/dishakumbhar)**|
 | **Nikhil Yadav**| 
 

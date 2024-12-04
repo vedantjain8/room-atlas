@@ -43,7 +43,7 @@ router.post(
         await redisClient.hSet(
           "ImageUploadLog",
           `${ref}`,
-          JSON.stringify({ userid, image_path: link, uploaded_on: new Date() })
+          JSON.stringify({ userid, image_path: link, uploaded_on: new Date() }),
         );
       }
 
@@ -52,7 +52,7 @@ router.post(
       console.error(error);
       return res.status(500).json({ response: error });
     }
-  }
+  },
 );
 
 router.post(
@@ -79,7 +79,7 @@ router.post(
         redisClient.hSet(
           "ImageUploadLog",
           `${ref}`,
-          JSON.stringify({ userid, image_path: link, uploaded_on: new Date() })
+          JSON.stringify({ userid, image_path: link, uploaded_on: new Date() }),
         ),
         pool.query(`UPDATE users SET avatar = $1 WHERE user_id = $2`, [
           link,
@@ -93,7 +93,7 @@ router.post(
       console.error(error);
       return res.status(500).json({ response: error });
     }
-  }
+  },
 );
 
 module.exports = router;

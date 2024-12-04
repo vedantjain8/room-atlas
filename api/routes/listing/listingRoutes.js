@@ -75,31 +75,31 @@ router.get("/", async (req, res) => {
   }
   if (bathrooms.length > 0) {
     filters.push(
-      `lm.bathrooms IN (${bathrooms.map(() => `$${idx++}`).join(",")})`
+      `lm.bathrooms IN (${bathrooms.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...bathrooms);
   }
   if (type.length > 0) {
     filters.push(
-      `lm.listing_type IN (${type.map(() => `$${idx++}`).join(",")})`
+      `lm.listing_type IN (${type.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...type);
   }
   if (tenants.length > 0) {
     filters.push(
-      `lm.prefered_tenants IN (${tenants.map(() => `$${idx++}`).join(",")})`
+      `lm.prefered_tenants IN (${tenants.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...tenants);
   }
   if (furnishing.length > 0) {
     filters.push(
-      `lm.furnishing IN (${furnishing.map(() => `$${idx++}`).join(",")})`
+      `lm.furnishing IN (${furnishing.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...furnishing);
   }
   if (amenities.length > 0) {
     filters.push(
-      `a.amenity_id IN (${amenities.map(() => `$${idx++}`).join(",")})`
+      `a.amenity_id IN (${amenities.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...amenities);
   }
@@ -134,7 +134,7 @@ router.get("/", async (req, res) => {
   // Check if the data is cached in Redis
   let data = await redisClient.hGet(
     "listings",
-    `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`
+    `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`,
   );
   if (data) {
     return res.status(200).json({ message: "Listing", data: JSON.parse(data) });
@@ -209,12 +209,12 @@ router.get("/", async (req, res) => {
     await redisClient.hSet(
       "listings",
       `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`,
-      JSON.stringify(result.rows)
+      JSON.stringify(result.rows),
     );
     await redisClient.hExpire(
       "listings",
       `listings-${offset}-${offset + settings.database.limit}-${filter_hash}`,
-      settings.server.defaultCacheTimeout
+      settings.server.defaultCacheTimeout,
     );
     return res.status(200).json({ message: "Listing", data: result.rows });
   } catch (error) {
@@ -337,7 +337,7 @@ router.post("/create", authenticateToken, async (req, res) => {
         area,
         city,
         state,
-      ]
+      ],
     );
 
     const listing_id = listing_result.rows[0].listing_id;
@@ -379,7 +379,7 @@ router.post("/create", authenticateToken, async (req, res) => {
       ],
       (err, result) => {
         if (err) console.error(`Error on listing_metadata_insert ${err}`);
-      }
+      },
     );
 
     return res.status(201).json({
@@ -460,7 +460,7 @@ router.get("/:id", async (req, res) => {
           lm.floor,
           lm.total_floors,
           lm.areasqft`,
-      [listing_id]
+      [listing_id],
     );
 
     if (result.rows.length === 0) {
@@ -470,7 +470,7 @@ router.get("/:id", async (req, res) => {
     await redisClient.setEx(
       `listing:${listing_id}`,
       settings.server.defaultCacheTimeout,
-      JSON.stringify(result.rows[0])
+      JSON.stringify(result.rows[0]),
     );
 
     await incrementViewCount(listing_id);
@@ -604,7 +604,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
         city,
         state,
         listing_id,
-      ]
+      ],
     );
 
     if (listing_result.rowCount === 0) {
@@ -666,7 +666,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
         total_floors,
         areasqft,
         listing_id,
-      ]
+      ],
     );
 
     return res.status(200).json({ message: "Listing updated successfully" });
@@ -692,7 +692,7 @@ router.get("/:id/stats", async (req, res) => {
 
     const result = await pool.query(
       "SELECT views, likes, shares FROM listing_stats WHERE listing_id = $1",
-      [listing_id]
+      [listing_id],
     );
 
     if (result.rows.length !== 0) {

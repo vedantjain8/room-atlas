@@ -48,7 +48,7 @@ export default function LoginForm() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
-        }
+        },
       );
 
       const data = await response.json();
@@ -57,7 +57,7 @@ export default function LoginForm() {
         // Set cookies and login using AuthContext
         Cookies.set("token", data.token, { expires: 3 }); // Set token to expire in 3 days
         login(data.token, data.user); // Store token and user in context
-        alert("Login successful"); //TODO: Redirect to dashboard
+        alert("Login successful"); 
         window.location.href = "/";
       } else {
         alert(data.message || "Login failed");

@@ -25,7 +25,7 @@ module.exports = (io, pool) => {
       // Send the message to the receiver if they're online
       const receiverSocketId = await redisClient.hGet(
         "WS-users",
-        receiver.toString()
+        receiver.toString(),
       );
       if (!receiverSocketId) {
         return;

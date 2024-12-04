@@ -132,7 +132,7 @@ const PostListing = () => {
             Authorization: `${token}`,
           },
           body: formData,
-        }
+        },
       );
 
       if (!response.ok) {
@@ -182,7 +182,7 @@ const PostListing = () => {
             total_floors: formData.listing_total_floors,
             areasqft: formData.listing_areasqft,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -364,7 +364,7 @@ const PostListing = () => {
   const fetchAmenities = async () => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/amenities`,
-      { method: "GET" }
+      { method: "GET" },
     );
     const data = await response.json();
     setAmenities(data.message || []);
@@ -373,7 +373,7 @@ const PostListing = () => {
   const fetchPreferences = async () => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_HOSTNAME}/const/listing/preferences`,
-      { method: "GET" }
+      { method: "GET" },
     );
     const data = await response.json();
     setPreferences(data.message || []);
@@ -523,7 +523,7 @@ const PostListing = () => {
                       >
                         {amenity.amenity_name}
                       </SelectItem>
-                    )
+                    ),
                   )}
                 </Select>
 
@@ -550,7 +550,7 @@ const PostListing = () => {
                       >
                         {preferences.preference}
                       </SelectItem>
-                    )
+                    ),
                   )}
                 </Select>
 
@@ -664,7 +664,7 @@ onChange={handleChange}
                           <option key={state.name} value={state.isoCode}>
                             {state.name}
                           </option>
-                        )
+                        ),
                       )}
                     </select>
                     {/* <Select

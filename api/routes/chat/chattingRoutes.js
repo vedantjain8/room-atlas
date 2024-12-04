@@ -38,12 +38,12 @@ router.get("/people/:sender", async (req, res) => {
     // Fetch the distinct receiver IDs
     const receiverResult = await pool.query(
       "SELECT DISTINCT(receiver_id) FROM messages WHERE sender_id = $1",
-      [sender]
+      [sender],
     );
 
     const senderResult = await pool.query(
       "SELECT DISTINCT(sender_id) FROM messages WHERE receiver_id = $1",
-      [sender]
+      [sender],
     );
 
     // Extract receiver and sender IDs
@@ -62,7 +62,7 @@ router.get("/people/:sender", async (req, res) => {
           return await getUserData(id);
         }
         return null; // Skip if ID is not unique
-      })
+      }),
     );
 
     // Filter out null values from skipped IDs

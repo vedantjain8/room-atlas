@@ -63,13 +63,13 @@ router.get("/", async (req, res) => {
     filters.push(
       `rlm.roommates_needed IN (${roommates_needed
         .map(() => `$${idx++}`)
-        .join(",")})`
+        .join(",")})`,
     );
     values.push(...roommates_needed);
   }
   if (max_roommates.length > 0) {
     filters.push(
-      `rlm.max_roommates IN (${max_roommates.map(() => `$${idx++}`).join(",")})`
+      `rlm.max_roommates IN (${max_roommates.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...max_roommates);
   }
@@ -84,31 +84,31 @@ router.get("/", async (req, res) => {
 
   if (bathrooms.length > 0) {
     filters.push(
-      `rlm.bathrooms IN (${bathrooms.map(() => `$${idx++}`).join(",")})`
+      `rlm.bathrooms IN (${bathrooms.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...bathrooms);
   }
   if (type.length > 0) {
     filters.push(
-      `rlm.listing_type IN (${type.map(() => `$${idx++}`).join(",")})`
+      `rlm.listing_type IN (${type.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...type);
   }
   if (furnishing.length > 0) {
     filters.push(
-      `rlm.furnishing IN (${furnishing.map(() => `$${idx++}`).join(",")})`
+      `rlm.furnishing IN (${furnishing.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...furnishing);
   }
   if (amenities.length > 0) {
     filters.push(
-      `a.amenity_id IN (${amenities.map(() => `$${idx++}`).join(",")})`
+      `a.amenity_id IN (${amenities.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(...amenities);
   }
   if (preferences.length) {
     filters.push(
-      `pl.preference_id IN (${preferences.map(() => `$${idx++}`).join(",")})`
+      `pl.preference_id IN (${preferences.map(() => `$${idx++}`).join(",")})`,
     );
     values.push(preferences.map(Number));
   }
@@ -137,7 +137,7 @@ router.get("/", async (req, res) => {
     "listings",
     `roomate-listings-${offset}-${
       offset + settings.database.limit
-    }-${filter_hash}`
+    }-${filter_hash}`,
   );
   if (data) {
     return res
@@ -348,7 +348,7 @@ router.post("/create", authenticateToken, async (req, res) => {
         area,
         city,
         state,
-      ]
+      ],
     );
 
     const listing_id = listing_result.rows[0].listing_id;
@@ -392,7 +392,7 @@ router.post("/create", authenticateToken, async (req, res) => {
       ],
       (err, result) => {
         if (err) console.error(`Error on listing_metadata_insert ${err}`);
-      }
+      },
     );
 
     return res.status(201).json({
@@ -418,12 +418,12 @@ router.get("/:id/roommatesdetail", async (req, res) => {
         connection_type = 'listing'
       AND
         is_approved = true`,
-      [req.params.id]
+      [req.params.id],
     );
 
     // Map user_id from rows to a promise that resolves user data
     const userDataPromises = roomatesDetailsData.rows.map((element) =>
-      getUserData(element.user_id)
+      getUserData(element.user_id),
     );
 
     // Await all promises to resolve
@@ -441,7 +441,7 @@ router.get("/:id", async (req, res) => {
   try {
     const cachedListing = await redisClient.hGet(
       "listing",
-      `roommate-listing:${listing_id}`
+      `roommate-listing:${listing_id}`,
     );
 
     if (cachedListing) {
@@ -499,7 +499,7 @@ router.get("/:id", async (req, res) => {
       rlm.floor,
       rlm.total_floors,
       rlm.areasqft`,
-      [listing_id]
+      [listing_id],
     );
 
     if (result.rows.length === 0) {
@@ -509,13 +509,13 @@ router.get("/:id", async (req, res) => {
     await redisClient.hSet(
       "listing",
       `roommate-listing:${listing_id}`,
-      JSON.stringify(result.rows[0])
+      JSON.stringify(result.rows[0]),
     );
 
     await redisClient.hExpire(
       "listing",
       `roommate-listing:${listing_id}`,
-      settings.server.defaultCacheTimeout
+      settings.server.defaultCacheTimeout,
     );
 
     await incrementViewCount(listing_id);
@@ -540,12 +540,12 @@ router.get("/:id/roommatesdetail", async (req, res) => {
         connection_type = 'listing'
       AND
         is_approved = true`,
-      [req.params.id]
+      [req.params.id],
     );
 
     // Map user_id from rows to a promise that resolves user data
     const userDataPromises = roomatesDetailsData.rows.map((element) =>
-      getUserData(element.user_id)
+      getUserData(element.user_id),
     );
 
     // Await all promises to resolve
@@ -574,7 +574,7 @@ router.get("/:id/stats", async (req, res) => {
 
     const result = await pool.query(
       "SELECT views, likes, shares FROM listing_stats WHERE listing_id = $1",
-      [listing_id]
+      [listing_id],
     );
 
     if (result.rows.length !== 0) {

@@ -47,7 +47,7 @@ const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const newOtp = [...otp];
     newOtp[index] = e.target.value;
@@ -71,7 +71,7 @@ const ExpandableOTPInput: React.FC<ExpandableOTPInputProps> = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ otp: otp.join(""), email: email }),
-      }
+      },
     );
 
     if (otpCheckResponse.ok) {

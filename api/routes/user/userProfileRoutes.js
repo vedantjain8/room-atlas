@@ -50,7 +50,7 @@ router.get("/profile/:username", async (req, res) => {
 
     const userResult = await pool.query(
       `select user_id from users where username = $1`,
-      [username]
+      [username],
     );
     if (userResult.rows.length === 0)
       return res.status(404).json({ message: "Profile not found" });
@@ -143,7 +143,7 @@ router.get(
             lm.total_floors,
             lm.areasqft
         LIMIT ${settings.database.limit} offset $2`,
-        [user_id, offset]
+        [user_id, offset],
       );
       return res.status(200).json({
         message: result.rows,
@@ -152,7 +152,7 @@ router.get(
       console.error("Error fetching listings:", error);
       return res.status(500).json({ message: "Server error" });
     }
-  }
+  },
 );
 
 module.exports = router;
