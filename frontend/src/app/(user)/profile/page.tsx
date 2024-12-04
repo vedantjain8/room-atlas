@@ -105,7 +105,7 @@ export default function ProfilePage() {
               width="0"
               height="0"
               sizes="100vw"
-              src={`${process.env.NEXT_PUBLIC_HOSTNAME}${userData.avatar}`}
+              src={userData.avatar}
               alt={`${userData.username}'s avatar`}
               className="w-32 h-32 rounded-full border-4 border-white shadow-md"
             />

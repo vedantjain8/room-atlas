@@ -77,9 +77,7 @@ function Navbar({ className }: { className?: string }) {
                   </button>
                 </Link>
                 <Link href="/profile">
-                  <Avatar
-                    src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
-                  />
+                  <Avatar src={user.avatar} />
                 </Link>
               </div>
             ) : (
@@ -131,9 +129,7 @@ function Navbar({ className }: { className?: string }) {
                   </button>
                 </Link>
                 <Link href="/profile">
-                  <Avatar
-                    src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
-                  />
+                  <Avatar src={user.avatar} />
                 </Link>
               </div>
             ) : (

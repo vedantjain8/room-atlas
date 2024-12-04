@@ -367,9 +367,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
       </div>
       <div className="flex flex-col gap-4">
         <div className="flex gap-4 items-center">
-          <Avatar
-            src={`${process.env.NEXT_PUBLIC_HOSTNAME}${ownerDetails.avatar}`}
-          />
+          <Avatar src={ownerDetails.avatar} />
           <h2>{ownerDetails.username}</h2>
         </div>
         <div className="flex flex-col gap-2 border-1 border-sky-600 rounded p-3">
@@ -404,9 +402,7 @@ function ListingDetails({ params }: { params: { listingID: string } }) {
             key={index}
           >
             <div className="flex gap-4 items-start">
-              <Avatar
-                src={`${process.env.NEXT_PUBLIC_HOSTNAME}${review.user.avatar}`}
-              />
+              <Avatar src={review.user.avatar} />
             </div>
             <div className="flex flex-col gap-4 items-start justify-center">
               <h2 className="pt-1 font-semibold">{review.user.username}</h2>

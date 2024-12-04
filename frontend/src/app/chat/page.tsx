@@ -173,7 +173,7 @@ export default function ChatPage() {
                     width="0"
                     height="0"
                     sizes="100vw"
-                    src={`${process.env.NEXT_PUBLIC_HOSTNAME}${user.avatar}`}
+                    src={user.avatar}
                     alt={`User ${user.user_id}`}
                     className="w-10 h-10 rounded-full"
                   />

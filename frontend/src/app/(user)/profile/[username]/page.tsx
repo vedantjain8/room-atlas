@@ -60,7 +60,7 @@ export default function ProfilePage({
         <div className="flex flex-col md:flex-row items-center">
           <div className="w-full md:w-1/3  p-6 flex flex-col items-center">
             <Image
-              src={`${process.env.NEXT_PUBLIC_HOSTNAME}${userData.avatar}`}
+              src={userData.avatar}
               alt={`${userData.username}'s avatar`}
               className="w-32 h-32 rounded-full border-4 border-white shadow-md"
               width="0"

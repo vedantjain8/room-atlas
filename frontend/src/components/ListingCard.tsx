@@ -87,10 +87,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
         <CardBody>
           <div className="w-full h-60 overflow-hidden rounded-t-lg">
             <Image
-              src={
-                `${process.env.NEXT_PUBLIC_HOSTNAME}/${image[0]}` ||
-                "/path/to/default-image.png"
-              }
+              src={image[0] || "/path/to/default-image.png"}
               alt={title}
               className="object-cover w-full h-full"
             />

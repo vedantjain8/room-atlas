@@ -11,10 +11,10 @@ const settings = {
     level: "info",
     file: "app.log",
   },
-  image_folder: {
-    uploaded_image_folder: "public/assets/upload/images/",
-    uploaded_profile_folder: "public/assets/upload/profile/",
-  },
+  // image_folder: {
+  //   uploaded_image_folder: "public/assets/upload/images/",
+  //   uploaded_profile_folder: "public/assets/upload/profile/",
+  // },
 };
 
 module.exports = settings;

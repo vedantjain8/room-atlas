@@ -23,20 +23,20 @@ const reviewRoutes = require("./routes/listing/reviewRoutes");
 const uploadImageRoutes = require("./routes/image/uploadImageRoutes");
 const settings = require("./config/settings");
 
-const createDirectory = (directoryPath) => {
-  fs.access(directoryPath, (error) => {
-    if (error) {
-      fs.mkdirSync(directoryPath, { recursive: true });
-      console.log(`Directory created: ${directoryPath}`);
-    } else {
-      console.log(`Directory already exists: ${directoryPath}`);
-    }
-  });
-};
+// const createDirectory = (directoryPath) => {
+//   fs.access(directoryPath, (error) => {
+//     if (error) {
+//       fs.mkdirSync(directoryPath, { recursive: true });
+//       console.log(`Directory created: ${directoryPath}`);
+//     } else {
+//       console.log(`Directory already exists: ${directoryPath}`);
+//     }
+//   });
+// };
 
-const publicFolder = path.join(__dirname, "public");
-createDirectory(path.join(publicFolder, "assets", "upload", "images"));
-createDirectory(path.join(publicFolder, "assets", "upload", "profile"));
+// const publicFolder = path.join(__dirname, "public");
+// createDirectory(path.join(publicFolder, "assets", "upload", "images"));
+// createDirectory(path.join(publicFolder, "assets", "upload", "profile"));
 
 // cron jobs
 require("./jobs/cron24hr");

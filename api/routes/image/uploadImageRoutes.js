@@ -7,6 +7,14 @@ const { randomUUID } = require("crypto");
 const { authenticateToken } = require("../../middleware/jwtMiddleware");
 const getUserData = require("../../functions/user");
 const settings = require("../../config/settings");
+const cloudinary = require("cloudinary").v2;
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const router = express.Router();
 
@@ -25,29 +33,38 @@ router.post(
       const imageLinks = [];
 
       for (const file of req.files) {
-        const { buffer, originalname } = file;
+        const { buffer } = file;
         if (!buffer) {
           return res.status(400).json({ response: "No image uploaded" });
         }
 
-        const ref = `${Date.now()}-${randomUUID()}.webp`;
+        // Process image with Sharp before uploading to Cloudinary
+        const processedBuffer = await sharp(buffer)
+          .webp({ quality: 80 })
+          .toBuffer();
 
-        // Convert and save low-quality image
-        await sharp(buffer)
-          .webp({ quality: 20 })
-          .toFile(`${settings.image_folder.uploaded_image_folder}${ref}`);
+        // Upload to Cloudinary
+        const uploadResponse = await new Promise((resolve) => {
+          cloudinary.uploader
+            .upload_stream((error, uploadResult) => {
+              if (error) throw error;
+              return resolve(uploadResult);
+            })
+            .end(processedBuffer);
+        });
 
-        const link = `/assets/upload/images/${ref}`;
+        const link = uploadResponse.secure_url; // Get the uploaded image URL
         imageLinks.push(link);
 
+        // Store image metadata in Redis
         await redisClient.hSet(
           "ImageUploadLog",
-          `${ref}`,
+          `${uploadResponse.public_id}`,
           JSON.stringify({ userid, image_path: link, uploaded_on: new Date() }),
         );
       }
 
-      return res.json({ response: imageLinks }); // Return an array of links
+      return res.json({ response: imageLinks }); // Return array of Cloudinary links
     } catch (error) {
       console.error(error);
       return res.status(500).json({ response: error });
@@ -62,23 +79,36 @@ router.post(
     try {
       const userid = req.user.userID;
       if (!userid) {
-        res.status(401).json({ response: "Unauthorized" });
+        return res.status(401).json({ response: "Unauthorized" });
       }
 
-      const { buffer, originalname } = req.file;
+      const { buffer } = req.file;
       if (!buffer) {
         return res.status(400).json({ response: "No image uploaded" });
       }
-      const ref = `${userid}.webp`;
-      // Convert and save low-quality image
-      await sharp(buffer)
-        .webp({ quality: 20 })
-        .toFile(settings.image_folder.uploaded_profile_folder + ref);
-      const link = `/assets/upload/profile/${ref}`;
+
+      // Process image with Sharp before uploading to Cloudinary
+      const processedBuffer = await sharp(buffer)
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      // Upload to Cloudinary
+      const uploadResponse = await new Promise((resolve) => {
+        cloudinary.uploader
+          .upload_stream((error, uploadResult) => {
+            if (error) throw error;
+            return resolve(uploadResult);
+          })
+          .end(processedBuffer);
+      });
+
+      const link = uploadResponse.secure_url; // Get the uploaded image URL
+
+      // Update avatar in Redis and Database
       await Promise.all([
         redisClient.hSet(
           "ImageUploadLog",
-          `${ref}`,
+          `${uploadResponse.public_id}`,
           JSON.stringify({ userid, image_path: link, uploaded_on: new Date() }),
         ),
         pool.query(`UPDATE users SET avatar = $1 WHERE user_id = $2`, [
@@ -88,7 +118,7 @@ router.post(
       ]);
 
       await getUserData(userid, true);
-      return res.json({ response: link });
+      return res.json({ response: link }); // Return Cloudinary profile link
     } catch (error) {
       console.error(error);
       return res.status(500).json({ response: error });
