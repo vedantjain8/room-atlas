@@ -1,0 +1,22 @@
+FROM node:alpine AS build
+LABEL authors="Vedant Jain"
+
+WORKDIR /app
+
+COPY package.json ./
+
+RUN apk add openssl
+
+COPY . .
+
+RUN npm install
+
+RUN mkdir instance
+RUN openssl genrsa -out key.pem
+RUN openssl req -newkey rsa:2048 -nodes -keyout key.pem -out csr.pem -subj "/C=/ST=/L=/O=/OU=/CN="
+RUN openssl x509 -req -days 365 -in csr.pem -signkey key.pem -out private-key.pem
+RUN mv key.pem instance/private-key.pem
+
+EXPOSE 3100
+
+CMD [ "node", "server.js" ]
