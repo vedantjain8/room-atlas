@@ -3,8 +3,8 @@ services:
         depends_on:
             - db
             - redis-stack
-        container_name: room-atlas
-        image: ghcr.io/vedantjain8/room-atlas:latest
+        container_name: room-atlas-api
+        image: ghcr.io/vedantjain8/room-atlas-api:latest
         restart: unless-stopped
         ports:
             - '3100:3100'
@@ -22,6 +22,21 @@ services:
             CLOUDINARY_API_KEY: CLOUDINARY_API_KEY
             CLOUDINARY_API_SECRET: CLOUDINARY_API_SECRET_KEY
             CLOUDINARY_URL: cloudinary://CLOUDINARY_API_KEY:CLOUDINARY_API_SECRET_KEY@CLOUDINARY_NAME
+  
+  room-atlas-frontend:
+    depends_on:
+      - room-atlas-api
+      - db
+      - redis-stack
+    container_name: room-atlas-frontend
+    hostname: roomatlas
+    ports:
+      - '3000:3000'
+    image: ghcr.io/vedantjain8/room-atlas-frontend:latest
+    environment:
+      - HOSTNAME: http://localhost:3100
+      - FRONTEND_HOSTNAME: http://localhost:3000/
+
 
   db:
     container_name: db
@@ -31,7 +46,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - '/home/localhub/db/:/var/lib/postgresql/data'
+      - '/home/room-atlas/db/:/var/lib/postgresql/data'
     environment:
       POSTGRES_PASSWORD: CHANGETHIS
       POSTGRES_DATABASE: roomatlas

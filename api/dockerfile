@@ -3,7 +3,7 @@ LABEL authors="Vedant Jain"
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
 
 RUN apk add openssl
 

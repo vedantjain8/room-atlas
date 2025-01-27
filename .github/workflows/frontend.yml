@@ -1,4 +1,4 @@
-name: ci-docker-api
+name: ci-docker-frontend
 
 on:
   push:
@@ -30,4 +30,4 @@ jobs:
           file: ./api/dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/${{ github.repository }}-api:${{ github.sha }}, ghcr.io/${{ github.repository }}-api:latest
+          tags: ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}, ghcr.io/${{ github.repository }}-frontend:latest
